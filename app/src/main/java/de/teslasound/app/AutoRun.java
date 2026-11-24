@@ -39,7 +39,8 @@ final class AutoRun {
         double a;
         if(power>0){
             int gear=Math.max(1,engine.gear()),want=gear;
-            double rpm=engine.rpm();
+            // Shift decisions use the locked-up drivetrain RPM (speed × ratio), not the launch slip.
+            double rpm=speed*spec.ratios[gear-1];
             double here=net(speed,gear);
             sinceDownshift+=dt;
             if(gear<spec.ratios.length){

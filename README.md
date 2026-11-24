@@ -47,3 +47,6 @@ Engine tone tuned against real recordings from Wikimedia Commons: CI downloads t
 
 ## 0.7.2
 Horns are now recorded-style samples per vehicle (generated with ElevenLabs Sound Effects from vehicle-specific descriptions, four variants each; the cleanest single steady honk was picked automatically by tools/prepare_horns.py, see analysis/horn_selection.json). Tapping gives a short honk, holding loops the steady part seamlessly, releasing fades out. The procedural horn remains as a fallback.
+
+## 0.7.3
+Clutch/converter slip now only acts while pulling away (engine held at a launch RPM until the drivetrain catches up); afterwards RPM is exactly speed × ratio. Previously the slip was added permanently while accelerating, so fast cars (e.g. Chiron) showed too high RPM and the automatic run shifted far too early (Chiron 1→2 at 13 km/h, now 30 km/h).

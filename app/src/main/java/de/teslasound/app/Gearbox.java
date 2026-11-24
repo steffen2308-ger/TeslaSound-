@@ -63,7 +63,10 @@ final class Gearbox {
             boolean braking=accFast<-1.0 && downRpm<p.idle+.45*range;
             if((lugging||kickdown||braking) && downRpm<p.redline*.92)shift(p,gear-1);
         }
-        double target=clamp(smoothSpeed*p.ratios[gear-1]+Math.max(0,accel)*p.slip,p.idle,p.redline);
+        // The clutch (or torque converter) only slips while pulling away: the engine is held at a
+        // launch RPM until the gearbox side catches up, then RPM follows speed × ratio exactly.
+        double launch=p.idle+Math.max(0,accel)*p.slip;
+        double target=clamp(Math.max(smoothSpeed*p.ratios[gear-1],launch),p.idle,p.redline);
         if(shiftLeft>0){
             double progress=1-shiftLeft/duration;
             target=fromRpm+(target-fromRpm)*clamp(progress*2.2,0,1);
