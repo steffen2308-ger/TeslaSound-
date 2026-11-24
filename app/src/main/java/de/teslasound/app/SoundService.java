@@ -118,7 +118,7 @@ public class SoundService extends Service implements SensorEventListener, Locati
                 .setBufferSizeInBytes(Math.max(min,2048)).setTransferMode(AudioTrack.MODE_STREAM).build();
             track=out;out.play();
             short[] pcm=new short[256];
-            EngineAudio engine=new EngineAudio(getAssets(),rate);
+            EngineAudio engine=new EngineAudio(getAssets(),rate,new java.io.File(getFilesDir(),"engines"));
             double simSpeed=0,simAccel=0,previousDemo=0, demoDip=0;
             int lastDemoShift=demoShift;
             boolean wasValid=false, wasDemo=demo;

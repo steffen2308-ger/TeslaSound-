@@ -25,7 +25,15 @@ final class EngineAudio {
         new Spec(900,9000,240,.15,new double[]{355,245,182,143,115,94,79},new double[]{0,1.0/6,2.0/6,3.0/6,4.0/6,5.0/6},new double[]{1,.86,.96,.89,.99,.88},new double[]{145,315,720,1520},new double[]{.43,.49,.34,.23},.12,.08),
         new Spec(650,7400,210,.27,new double[]{365,248,179,132,102,79},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.35,.93,.58,.47,1,.43,.88},new double[]{69,135,268,540},new double[]{.78,.49,.30,.14},.13,.08),
         new Spec(850,8900,260,.13,new double[]{378,259,193,151,120,99,82},new double[]{0,1.0/12,2.0/12,3.0/12,4.0/12,5.0/12,6.0/12,7.0/12,8.0/12,9.0/12,10.0/12,11.0/12},new double[]{1,.94,.99,.97,.96,1,.95,.99,.96,1,.97,.95},new double[]{175,440,970,1920},new double[]{.26,.43,.47,.29},.10,.04),
-        new Spec(720,6500,215,.19,new double[]{355,238,176,139,111,90,74,60},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.47,.92,.64,.55,1,.50,.89},new double[]{72,147,335,670},new double[]{.72,.45,.27,.16},.13,.09)
+        new Spec(720,6500,215,.19,new double[]{355,238,176,139,111,90,74,60},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.47,.92,.64,.55,1,.50,.89},new double[]{72,147,335,670},new double[]{.72,.45,.27,.16},.13,.09),
+        new Spec(950,8500,245,0.18,new double[]{390,260,191,150,121,99,83},new double[]{0.0/12,1.0/12,2.0/12,3.0/12,4.0/12,5.0/12,6.0/12,7.0/12,8.0/12,9.0/12,10.0/12,11.0/12},new double[]{1,0.92,0.98,0.89,1,0.95,0.98,0.92,1,0.9,0.98,0.95},new double[]{205,520,1100,2400},new double[]{0.28,0.45,0.48,0.27},0.12,0.06),
+        new Spec(700,6800,190,0.21,new double[]{320,217,159,123,99,81,67,55},new double[]{0.0/8,1.0/8,2.0/8,3.0/8,4.0/8,5.0/8,6.0/8,7.0/8},new double[]{1,0.52,0.94,0.62,0.58,1,0.55,0.91},new double[]{72,148,300,610},new double[]{0.72,0.43,0.23,0.12},0.12,0.06),
+        new Spec(800,6700,180,0.16,new double[]{300,210,155,120,96,78,65},new double[]{0.0/16,1.0/16,2.0/16,3.0/16,4.0/16,5.0/16,6.0/16,7.0/16,8.0/16,9.0/16,10.0/16,11.0/16,12.0/16,13.0/16,14.0/16,15.0/16},new double[]{1,0.85,0.97,0.83,0.95,0.9,1,0.88,0.98,0.85,0.96,0.87,1,0.9,0.96,0.85},new double[]{65,155,360,780},new double[]{0.65,0.47,0.32,0.17},0.16,0.08),
+        new Spec(750,7200,190,0.2,new double[]{355,240,177,137,108,88,72,60},new double[]{0.0/6,1.0/6,2.0/6,3.0/6,4.0/6,5.0/6},new double[]{1,0.95,0.99,0.91,0.98,0.93},new double[]{120,265,560,1260},new double[]{0.52,0.43,0.3,0.16},0.13,0.08),
+        new Spec(1100,7500,220,0.12,new double[]{385,275,211,166,133,110},new double[]{0.0/8,1.0/8,2.0/8,3.0/8,4.0/8,5.0/8,6.0/8,7.0/8},new double[]{1,0.45,0.91,0.62,0.53,1,0.48,0.89},new double[]{83,182,410,880},new double[]{0.7,0.52,0.34,0.18},0.16,0.11),
+        new Spec(950,9000,250,0.15,new double[]{390,270,205,162,133,109},new double[]{0.0/10,1.0/10,2.0/10,3.0/10,4.0/10,5.0/10,6.0/10,7.0/10,8.0/10,9.0/10},new double[]{1,0.95,0.98,0.93,0.99,0.94,1,0.95,0.97,0.94},new double[]{220,520,1150,2450},new double[]{0.3,0.44,0.52,0.32},0.08,0.04),
+        new Spec(850,4300,100,0.46,new double[]{250,148,99,70},new double[]{0.0/4,1.0/4,2.0/4,3.0/4},new double[]{1,0.77,0.95,0.74},new double[]{100,228,510,1090},new double[]{0.58,0.47,0.32,0.2},0.21,0.2),
+        new Spec(850,9500,260,0.14,new double[]{410,292,219,169,135,111,94,80},new double[]{0.0/12,1.0/12,2.0/12,3.0/12,4.0/12,5.0/12,6.0/12,7.0/12,8.0/12,9.0/12,10.0/12,11.0/12},new double[]{1,0.97,0.99,0.94,1,0.96,0.98,0.95,1,0.97,0.99,0.95},new double[]{180,465,1050,2200},new double[]{0.29,0.43,0.51,0.31},0.1,0.05)
     };
     private static final class Loop {
         final double base;final float[] data;double pos;
@@ -33,6 +41,7 @@ final class EngineAudio {
         double next(double rpm){int i=(int)pos;int j=(i+1)%data.length;double x=data[i]+(data[j]-data[i])*(pos-i);pos+=Math.max(.48,Math.min(2.35,rpm/base));if(pos>=data.length)pos-=data.length;return x;}
     }
     private final int rate;
+    private double turbo=0,turboPhase=0,turboAir=0,previousLoad=0;
     private final Gearbox gearbox=new Gearbox();
     private final List<List<Loop>> recordings=new ArrayList<>();
     private final float[][] pulse=new float[SPECS.length][];
@@ -41,7 +50,7 @@ final class EngineAudio {
     private int current=-1,cursor=0,fireIndex=0;
     private double cycle=0,amp=0,lowNoise=0,noiseHigh=0,dc=0,level=0,revFlutter=0,shiftSound=0,blowerPhase=0,blowerLoad=0,prevRpm=0;
     private boolean previousShift=false;
-    EngineAudio(AssetManager assets,int rate){
+    EngineAudio(AssetManager assets,int rate, File imported){
         this.rate=rate;
         for(int k=0;k<SPECS.length;k++){
             List<Loop> list=new ArrayList<>();recordings.add(list);
@@ -66,9 +75,19 @@ final class EngineAudio {
                 }
                 list.sort(Comparator.comparingDouble(l->l.base));
             }catch(Exception e){android.util.Log.w("TeslaSound","Recording unavailable for "+k,e);}
+            File folder=new File(imported,Integer.toString(k));
+            File[] custom=folder.listFiles((f,name)->name.endsWith(".pcm"));
+            if(custom!=null)for(File file:custom)try{
+                double rpm=Double.parseDouble(file.getName().replace(".pcm",""));
+                byte[] bytes=java.nio.file.Files.readAllBytes(file.toPath());
+                ByteBuffer bb=ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
+                float[] samples=new float[bytes.length/2];for(int i=0;i<samples.length;i++)samples[i]=bb.getShort()/32768f;
+                if(samples.length>2000){list.removeIf(l->l.base==rpm);list.add(new Loop(rpm,samples));}
+            }catch(Exception ex){android.util.Log.w("TeslaSound","Custom recording failed",ex);}
+            list.sort(Comparator.comparingDouble(l->l.base));
         }
     }
-    void reset(){gearbox.reset();current=-1;cycle=0;fireIndex=0;Arrays.fill(ring,0);shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;}
+    void reset(){gearbox.reset();current=-1;cycle=0;fireIndex=0;Arrays.fill(ring,0);shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;}
     double rpm(){return gearbox.rpm;}
     int gear(){return gearbox.gear;}
     boolean shifting(){return gearbox.shiftLeft>0;}
@@ -76,7 +95,7 @@ final class EngineAudio {
     void render(short[] out,int mode,double speed,double acceleration,double volume,double dt){
         mode=Math.max(0,Math.min(SPECS.length-1,mode));
         Spec p=SPECS[mode];
-        if(current!=mode){gearbox.reset();current=mode;cycle=0;fireIndex=0;Arrays.fill(ring,0);previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;}
+        if(current!=mode){gearbox.reset();current=mode;cycle=0;fireIndex=0;Arrays.fill(ring,0);previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;}
         gearbox.update(p,speed,acceleration,dt);
         boolean shifting=shifting();
         if(shifting&&!previousShift)shiftSound=1;
@@ -126,6 +145,14 @@ final class EngineAudio {
             double samples=0;
             if(lo!=null){samples=lo.next(rpm)*wa;if(hi!=lo)samples+=hi.next(rpm)*wb;}
             double x=(1-recWeight)*synth+recWeight*samples;
+            if(mode==10||mode==11||mode==12){
+                double wanted=shifting?0:load*Math.sqrt(Math.max(0,norm));
+                turbo+=(wanted-turbo)*(wanted>turbo?.00014:.00035);
+                turboPhase+=2*Math.PI*(900+turbo*3800)/rate;if(turboPhase>2*Math.PI)turboPhase-=2*Math.PI;
+                turboAir+=.18*(white-turboAir);
+                x+=turbo*turbo*(.10*Math.sin(turboPhase)+.14*(white-turboAir));
+                if(shifting)x+=turbo*.16*(white-turboAir);
+            }
             if(mode==8){
                 // Roots-type blower: load-dependent narrow high-frequency whine, with sidebands.
                 blowerLoad+=.0014*((shifting?0:load)-blowerLoad);

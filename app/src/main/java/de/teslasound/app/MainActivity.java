@@ -15,7 +15,9 @@ public class MainActivity extends Activity {
     private final Handler handler = new Handler();
     private TextView status, engineStatus;
     private boolean demoMode;
-    private Spinner profile;
+    private TextView selectedCar;
+    private VehicleCard[] cards;
+    private int importProfile;
     private SeekBar volume, demoSpeed;
     private final Runnable refresh = new Runnable() {
         public void run() {
@@ -39,14 +41,28 @@ public class MainActivity extends Activity {
         root.addView(label("Virtueller Motorsound • Bluetooth",16));
         status=label("Bereit",25); status.setGravity(Gravity.CENTER); status.setPadding(0,45,0,45); root.addView(status);
         engineStatus=label("Motor aus",18); engineStatus.setGravity(Gravity.CENTER); root.addView(engineStatus);
-        root.addView(label("Motorprofil",16));
-        profile=new Spinner(this);
-        ArrayAdapter<String> adapter=new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"Formel 1 • V8 (klassisch)","V8 • klassisch","Diesel • 4 Zylinder","Benziner • 4 Zylinder","Zweitakter • Trabant-Stil","Porsche 911 GT3 / GT3 RS","V8 Muscle • Mustang GT-Stil","Ferrari F12 • V12","Dodge Challenger SRT Hellcat"});
-        profile.setAdapter(adapter); profile.setSelection(SoundService.profile);
-        profile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
-            public void onItemSelected(AdapterView<?> p, android.view.View v,int i,long id){SoundService.profile=i;}
-            public void onNothingSelected(AdapterView<?> p){}
-        }); root.addView(profile);
+        if(!SoundService.running)SoundService.profile=Math.max(0,Math.min(VehicleCard.NAMES.length-1,getPreferences(0).getInt("vehicle",0)));
+        selectedCar=label("",20);root.addView(selectedCar);
+        root.addView(label("Garage · 17 Fahrzeuge",16));
+        root.addView(label("Tippe auf ein Auto, um seinen Motorsound zu wählen.",13));
+        cards=new VehicleCard[VehicleCard.NAMES.length];
+        for(int i=0;i<cards.length;i+=2){
+            LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
+            for(int j=i;j<Math.min(i+2,cards.length);j++){
+                final int index=j;
+                VehicleCard card=new VehicleCard(this,j);cards[j]=card;
+                LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(125),1);lp.setMargins(dp(3),dp(4),dp(3),dp(4));
+                row.addView(card,lp);card.setOnClickListener(v->selectCar(index));
+            }
+            if(i+1==cards.length)row.addView(new android.view.View(this),new LinearLayout.LayoutParams(0,dp(125),1));
+            root.addView(row);
+        }
+        selectCar(SoundService.profile);
+        Button custom=new Button(this);custom.setText("Eigene Motoraufnahme importieren");root.addView(custom);custom.setOnClickListener(v->{
+            if(SoundService.running){Toast.makeText(this,"Sound zuerst stoppen.",Toast.LENGTH_SHORT).show();return;}
+            importProfile=SoundService.profile;
+            Intent pick=new Intent(Intent.ACTION_OPEN_DOCUMENT);pick.setType("audio/*");pick.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(pick,7);
+        });
         root.addView(label("Sound-Lautstärke",16)); volume=new SeekBar(this); volume.setMax(100); volume.setProgress((int)(SoundService.volume*100)); root.addView(volume);
         volume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
             public void onProgressChanged(SeekBar b,int p,boolean u){SoundService.volume=p/100f;}
@@ -69,6 +85,27 @@ public class MainActivity extends Activity {
             new android.app.AlertDialog.Builder(this).setTitle("Audioquellen").setMessage(b2.toString("UTF-8")).setPositiveButton("OK",null).show();
         }catch(java.io.IOException ex){Toast.makeText(this,"Quellen nicht verfügbar",Toast.LENGTH_SHORT).show();}});
         TextView note=label("Vor der Fahrt einstellen. Handy sicher befestigen. Tesla: Bluetooth als Medienquelle wählen. Bei fehlendem GPS bleibt der Fahr-Sound stumm. Nicht während der Fahrt bedienen.",14); note.setPadding(0,24,0,0); root.addView(note);
+    }
+    private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density+.5f);}
+    private void selectCar(int index){
+        SoundService.profile=index;getPreferences(0).edit().putInt("vehicle",index).apply();
+        selectedCar.setText("Ausgewählt: "+VehicleCard.NAMES[index]);
+        for(VehicleCard card:cards)if(card!=null)card.setSelectedCar(card.index==index);
+    }
+    @Override protected void onActivityResult(int request,int result,Intent data){
+        super.onActivityResult(request,result,data);
+        if(request!=7||result!=RESULT_OK||data==null||data.getData()==null)return;
+        final android.net.Uri uri=data.getData();final int chosen=importProfile;
+        EditText input=new EditText(this);input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);input.setHint("z. B. 2500");
+        new android.app.AlertDialog.Builder(this).setTitle("Drehzahl der Aufnahme (U/min)")
+            .setMessage("PCM-WAV, 16 Bit, 44,1 kHz, mono oder stereo, mit möglichst gleichmäßiger Drehzahl. Nur Aufnahmen verwenden, für die du die Rechte hast.")
+            .setView(input).setNegativeButton("Abbrechen",null).setPositiveButton("Importieren",(dialog,which)->{
+                final int rpm;try{rpm=Integer.parseInt(input.getText().toString());if(rpm<400||rpm>22000)throw new NumberFormatException();}catch(Exception ex){Toast.makeText(this,"Ungültige Drehzahl",Toast.LENGTH_LONG).show();return;}
+                new Thread(()->{try(java.io.InputStream in=getContentResolver().openInputStream(uri)){
+                    WavImport.save(in,new java.io.File(getFilesDir(),"engines"),chosen,rpm);
+                    runOnUiThread(()->Toast.makeText(this,"Aufnahme gespeichert. Beim nächsten Start aktiv.",Toast.LENGTH_LONG).show());
+                }catch(Exception ex){runOnUiThread(()->Toast.makeText(this,"Import fehlgeschlagen: "+ex.getMessage(),Toast.LENGTH_LONG).show());}}).start();
+            }).show();
     }
     private void requestStart(){
         if (!demoMode && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED){
