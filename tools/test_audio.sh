@@ -69,4 +69,9 @@ public class Preview {
 EOF
 javac -cp "$tmp/out" -d "$tmp/out" "$tmp/de/teslasound/app/Preview.java"
 java -cp "$tmp/out" de.teslasound.app.Preview "$tmp/trabant.pcm"
-ffmpeg -v error -y -f s16le -ar 44100 -ac 1 -i "$tmp/trabant.pcm" Trabant-Synth-Preview.wav
+python3 - "$tmp/trabant.pcm" <<'PY'
+import sys,wave,pathlib
+with wave.open('Trabant-Synth-Preview.wav','wb') as w:
+    w.setnchannels(1);w.setsampwidth(2);w.setframerate(44100)
+    w.writeframes(pathlib.Path(sys.argv[1]).read_bytes())
+PY
