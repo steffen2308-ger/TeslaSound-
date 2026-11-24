@@ -33,14 +33,3 @@ jobs:
           name: TeslaSound-APK
           path: TeslaSound.apk
           if-no-files-found: error
-      - name: Export Android signing tools for local photo packaging
-        run: |
-          mkdir -p packaging-tools
-          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" packaging-tools/
-          cp "$ANDROID_HOME/build-tools/35.0.0/zipalign" packaging-tools/
-          if [ -d "$ANDROID_HOME/build-tools/35.0.0/lib64" ]; then cp -r "$ANDROID_HOME/build-tools/35.0.0/lib64" packaging-tools/; fi
-      - uses: actions/upload-artifact@v4
-        with:
-          name: TeslaSound-packaging-tools
-          path: packaging-tools/
-          if-no-files-found: error
