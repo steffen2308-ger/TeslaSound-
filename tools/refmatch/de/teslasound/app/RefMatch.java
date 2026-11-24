@@ -42,8 +42,8 @@ public class RefMatch {
         StringBuilder o=new StringBuilder();
         o.append("{\"mode\":").append(mode).append(",\"frames\":").append(frames.size())
          .append(String.format(Locale.ROOT,",\"base\":%.2f,\"best\":%.2f",base,bestD))
-         .append(String.format(Locale.ROOT,",\"current\":{\"mufLo\":%.0f,\"mufHi\":%.0f,\"bright\":%.2f,\"sharp\":%.0f}",cur.mufLo,cur.mufHi,cur.bright,cur.sharp))
-         .append(String.format(Locale.ROOT,",\"params\":{\"mufLo\":%.0f,\"mufHi\":%.0f,\"bright\":%.2f,\"sharp\":%.0f}",best.mufLo,best.mufHi,best.bright,best.sharp))
+         .append(String.format(Locale.ROOT,",\"current\":{\"mufLo\":%.0f,\"mufHi\":%.0f,\"bright\":%.2f,\"sharp\":%.0f,\"rasp\":%.2f}",cur.mufLo,cur.mufHi,cur.bright,cur.sharp,cur.rasp))
+         .append(String.format(Locale.ROOT,",\"params\":{\"mufLo\":%.0f,\"mufHi\":%.0f,\"bright\":%.2f,\"sharp\":%.0f,\"rasp\":%.2f}",best.mufLo,best.mufHi,best.bright,best.sharp,best.rasp))
          .append(",\"bands\":").append(arr(CENTERS)).append(",\"ref\":").append(arr(ref))
          .append(",\"synthBase\":").append(arr(baseCurve)).append(",\"synthBest\":").append(arr(bestCurve)).append("}");
         System.out.println(o);

@@ -11,7 +11,7 @@ javac -d "$classes" $(find tools/refmatch -name '*.java') \
 for mode in 0 1 2 3 5 6 7 8 9 10 11 12 13 14 15 16; do
   files=$(ls "$refs"/${mode}_*.wav 2>/dev/null | tr '\n' ' ' || true)
   if [ -z "$files" ]; then echo "mode $mode: no reference"; continue; fi
-  echo "$mode $files"
+  echo "$mode" $files
 done | grep -v "no reference" | xargs -P "$(nproc)" -L 1 bash -c \
   'java -cp "'"$classes"'" de.teslasound.app.RefMatch "$0" "$@" || echo "{\"mode\":$0,\"error\":true}"' \
   >> "$outdir/results.jsonl"
