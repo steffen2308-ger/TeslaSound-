@@ -22,3 +22,6 @@ Stop audio when activity goes into background or task is removed. Private phase-
 
 ## 0.5.3
 Trabant private recordings: retain full unaveraged samples, avoid continuous overlap and synthetic/table fallback when a recording is present. Limit pitch ratio to 1.55 until native high-RPM recordings are available. Existing foreground exit behavior remains.
+
+## 0.5.4
+Dedicated real-time Trabant two-stroke synthesizer. Two combustion events per crank revolution, variable individual pressure pulses, fixed exhaust resonances, no loop playback or broadband hiss for the Trabant. Existing imported audio for other profiles is unchanged. A generated driving audio preview accompanies the CI artifact.

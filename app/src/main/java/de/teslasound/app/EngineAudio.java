@@ -43,6 +43,7 @@ final class EngineAudio {
         double next(double rpm,double maxRatio){int i=(int)pos;int j=(i+1)%data.length;double x=data[i]+(data[j]-data[i])*(pos-i);pos+=Math.max(.48,Math.min(maxRatio,rpm/base));if(pos>=data.length)pos-=data.length;return x;}
     }
     private final int rate;
+    private final TrabantAudio trabant;
     private double turbo=0,turboPhase=0,turboAir=0,previousLoad=0;
     private final Gearbox gearbox=new Gearbox();
     private final List<List<Loop>> recordings=new ArrayList<>();
@@ -60,6 +61,7 @@ final class EngineAudio {
     private double trabiFade=1;
     EngineAudio(AssetManager assets,int rate, File imported){
         this.rate=rate;
+        trabant=new TrabantAudio(rate);
         try{String[] files=assets.list("trabant_phase");if(files!=null)for(String name:files)if(name.endsWith(".pcm")){
             double rpm=Double.parseDouble(name.substring(0,name.length()-4));
             try(InputStream in=assets.open("trabant_phase/"+name)){ByteArrayOutputStream b=new ByteArrayOutputStream();byte[] buf=new byte[8192];int n;while((n=in.read(buf))!=-1)b.write(buf,0,n);ByteBuffer bb=ByteBuffer.wrap(b.toByteArray()).order(ByteOrder.LITTLE_ENDIAN);float[] x=new float[bb.remaining()/2];for(int j=0;j<x.length;j++)x[j]=bb.getShort()/32768f;if(x.length==8192)trabiTables.add(new Loop(rpm,x));}
@@ -107,15 +109,15 @@ final class EngineAudio {
             list.sort(Comparator.comparingDouble(l->l.base));
         }
     }
-    void reset(){gearbox.reset();current=-1;cycle=0;fireIndex=0;Arrays.fill(ring,0);shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
+    void reset(){trabant.reset();gearbox.reset();current=-1;cycle=0;fireIndex=0;Arrays.fill(ring,0);shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
     double rpm(){return gearbox.rpm;}
     int gear(){return gearbox.gear;}
     boolean shifting(){return gearbox.shiftLeft>0;}
-    boolean hasRecording(){return current>=0&&!recordings.get(current).isEmpty();}
+    boolean hasRecording(){return current>=0&&current!=4&&!recordings.get(current).isEmpty();}
     void render(short[] out,int mode,double speed,double acceleration,double volume,double dt){
         mode=Math.max(0,Math.min(SPECS.length-1,mode));
         Spec p=SPECS[mode];
-        if(current!=mode){gearbox.reset();current=mode;cycle=0;fireIndex=0;Arrays.fill(ring,0);previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
+        if(current!=mode){trabant.reset();gearbox.reset();current=mode;cycle=0;fireIndex=0;Arrays.fill(ring,0);previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
         gearbox.update(p,speed,acceleration,dt);
         boolean shifting=shifting();
         if(shifting&&!previousShift)shiftSound=1;
@@ -124,6 +126,19 @@ final class EngineAudio {
         double cut=shifting?(.10+.82*Math.pow(1-gearbox.shiftLeft/gearbox.duration,2)):1;
         double targetAmp=volume*(.20+.80*Math.sqrt(load))*cut;
         if(mode==4)targetAmp=volume*(.24+.76*load)*cut;
+        if(mode==4){
+            // Dedicated physical-style synthesizer deliberately bypasses ALL imported loops.
+            double start=prevRpm>0?prevRpm:rpm;
+            double step=(rpm-start)/out.length;
+            double progress=shifting?1-gearbox.shiftLeft/gearbox.duration:1;
+            for(int i=0;i<out.length;i++){
+                start+=step;
+                double y=trabant.next(start,load,targetAmp,shifting,progress);
+                out[i]=(short)(Math.max(-.97,Math.min(.97,y))*32767);
+            }
+            prevRpm=rpm;
+            return;
+        }
         List<Loop> layers=recordings.get(mode);
         Loop lo=null,hi=null;
         double mix=0;
