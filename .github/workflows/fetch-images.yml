@@ -1,0 +1,36 @@
+name: Fahrzeugbilder laden
+# One-off helper: downloads generated vehicle images, crops them to the 720x300 card format.
+on:
+  push:
+    branches: ['asset-fetch*']
+    paths: ['.github/workflows/fetch-images.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install --quiet pillow
+      - name: Download and crop
+        env:
+          BUS_URL: "https://elevenlabsusercontent.com/database/workspace/0e1721a6a8a54c01b8ab521fa20e5399/content_generation/QVOOG8yDnJDWgy3CNEA3/rfE7aS5k61WgpOfHfQIM/content.png?Expires=1795561200&KeyName=assets-cdn-key-1&Signature=bKVhp7VDYOirqfxpBGpNQQQuRko="
+          SHUTTLE_URL: "https://elevenlabsusercontent.com/database/workspace/0e1721a6a8a54c01b8ab521fa20e5399/content_generation/92TJiNuKQbJdejOo5fTV/FfV4dq4TNoRGTdlE0yKQ/content.png?Expires=1795561200&KeyName=assets-cdn-key-1&Signature=bGNFnGS-jftzWNDKeOyJtOKpevk="
+        run: |
+          python3 - <<'PY'
+          import io, os, urllib.request
+          from PIL import Image
+          for idx, key in ((17, 'BUS_URL'), (18, 'SHUTTLE_URL')):
+              img = Image.open(io.BytesIO(urllib.request.urlopen(os.environ[key], timeout=60).read())).convert('RGB')
+              w, h = img.size; th = int(w / 2.4); top = max(0, (h - th) // 2)
+              img = img.crop((0, top, w, top + th)).resize((720, 300), Image.LANCZOS)
+              img.save(f'app/src/main/assets/vehicles/{idx}.jpg', quality=88)
+              print(idx, img.size)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/assets/vehicles/17.jpg app/src/main/assets/vehicles/18.jpg
+          git commit -m "Add bus and Space Shuttle card images"
+          git push
