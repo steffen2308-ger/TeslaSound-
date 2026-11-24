@@ -29,8 +29,14 @@ final class VehicleCard extends View {
     };
     final int index;
     private boolean chosen;
-    private final Paint p=new Paint(3);
-    VehicleCard(Context c,int i){super(c);index=i;setClickable(true);setFocusable(true);setContentDescription(NAMES[i]+", "+ENGINES[i]);}
+    private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
+    private final Bitmap photo;
+    VehicleCard(Context c,int i){super(c);index=i;photo=loadPhoto(c,i);setClickable(true);setFocusable(true);setContentDescription(NAMES[i]+", "+ENGINES[i]);}
+    private static Bitmap loadPhoto(Context context,int index){
+        try(java.io.InputStream in=context.getAssets().open("vehicles/"+index+".jpg")){
+            return BitmapFactory.decodeStream(in);
+        }catch(java.io.IOException|RuntimeException ex){return null;}
+    }
     void setSelectedCar(boolean value){chosen=value;setSelected(value);invalidate();}
     private void color(int c){p.setColor(c);p.setStyle(Paint.Style.FILL);}
     private void rect(Canvas c,float x,float y,float x2,float y2,int color){color(color);c.drawRect(x,y,x2,y2,p);}
@@ -46,6 +52,13 @@ final class VehicleCard extends View {
         color(chosen?0xff1e3347:0xff222831);canvas.drawRoundRect(1,1,getWidth()-1,getHeight()-1,13,13,p);
         p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(chosen?3:1);p.setColor(chosen?0xff67c7ff:0xff46515d);canvas.drawRoundRect(2,2,getWidth()-2,getHeight()-2,13,13,p);p.setStyle(Paint.Style.FILL);
         canvas.save();canvas.translate((getWidth()-300*scale)/2,(getHeight()-220*scale)/2);canvas.scale(scale,scale);
+        if(photo!=null){
+            float maxW=286,maxH=121;
+            float ratio=Math.min(maxW/photo.getWidth(),maxH/photo.getHeight());
+            float w=photo.getWidth()*ratio,h=photo.getHeight()*ratio;
+            RectF dest=new RectF(150-w/2,77-h/2,150+w/2,77+h/2);
+            p.setColor(Color.WHITE);p.setStyle(Paint.Style.FILL);canvas.drawBitmap(photo,null,dest,p);
+        }else{
         canvas.save();canvas.translate(0,29);
         color(0x66000000);canvas.drawOval(13,77,287,94,p);
         Path b=path(BODY[index]);color(COLORS[index]);canvas.drawPath(b,p);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1.4f);p.setColor(0xffd4dce2);canvas.drawPath(b,p);p.setStyle(Paint.Style.FILL);
@@ -76,6 +89,7 @@ final class VehicleCard extends View {
             int radius=index==0?21:18;color(0xff0b0f13);canvas.drawCircle(cx,79,radius,p);color(0xff7f8b97);canvas.drawCircle(cx,79,radius*.66f,p);color(0xff2a3540);canvas.drawCircle(cx,79,radius*.47f,p);color(0xffcad2d8);canvas.drawCircle(cx,79,radius*.19f,p);
         }
         canvas.restore();
+        }
         text(canvas,NAMES[index],157,22,0xfff5f7f9,276);text(canvas,ENGINES[index],180,16,0xffb9c9d7,276);
         if(chosen){color(0xff67c7ff);canvas.drawCircle(276,18,11,p);p.setColor(0xff122335);p.setStrokeWidth(2.5f);p.setStyle(Paint.Style.STROKE);canvas.drawLine(270,18,275,23,p);canvas.drawLine(275,23,282,14,p);p.setStyle(Paint.Style.FILL);}
         canvas.restore();

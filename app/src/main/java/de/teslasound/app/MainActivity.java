@@ -35,29 +35,22 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle b) {
         super.onCreate(b);
         LinearLayout root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(32,64,32,32); root.setBackgroundColor(0xff15191f);
+        root.setPadding(dp(12),dp(16),dp(12),dp(16)); root.setBackgroundColor(0xff15191f);
         ScrollView scroll = new ScrollView(this); scroll.addView(root); setContentView(scroll);
-        root.addView(label("TESLASOUND",32));
+        scroll.setClipToPadding(false);
+        scroll.setOnApplyWindowInsetsListener((v,insets)->{
+            v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
+            return insets;
+        });
+        scroll.requestApplyInsets();
+        root.setBackgroundColor(0xff10151b);
+        root.addView(label("TESLASOUND",28));
         root.addView(label("Virtueller Motorsound • Bluetooth",16));
-        status=label("Bereit",25); status.setGravity(Gravity.CENTER); status.setPadding(0,45,0,45); root.addView(status);
+        status=label("Bereit",25); status.setGravity(Gravity.CENTER); status.setPadding(0,dp(12),0,dp(8)); root.addView(status);
         engineStatus=label("Motor aus",18); engineStatus.setGravity(Gravity.CENTER); root.addView(engineStatus);
         if(!SoundService.running)SoundService.profile=Math.max(0,Math.min(VehicleCard.NAMES.length-1,getPreferences(0).getInt("vehicle",0)));
         selectedCar=label("",20);root.addView(selectedCar);
-        root.addView(label("Garage · 17 Fahrzeuge",16));
-        root.addView(label("Tippe auf ein Auto, um seinen Motorsound zu wählen.",13));
-        cards=new VehicleCard[VehicleCard.NAMES.length];
-        for(int i=0;i<cards.length;i+=2){
-            LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
-            for(int j=i;j<Math.min(i+2,cards.length);j++){
-                final int index=j;
-                VehicleCard card=new VehicleCard(this,j);cards[j]=card;
-                LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(125),1);lp.setMargins(dp(3),dp(4),dp(3),dp(4));
-                row.addView(card,lp);card.setOnClickListener(v->selectCar(index));
-            }
-            if(i+1==cards.length)row.addView(new android.view.View(this),new LinearLayout.LayoutParams(0,dp(125),1));
-            root.addView(row);
-        }
-        selectCar(SoundService.profile);
+        selectedCar.setText("Ausgewählt: "+VehicleCard.NAMES[SoundService.profile]);
         Button custom=new Button(this);custom.setText("Eigene Motoraufnahme importieren");root.addView(custom);custom.setOnClickListener(v->{
             if(SoundService.running){Toast.makeText(this,"Sound zuerst stoppen.",Toast.LENGTH_SHORT).show();return;}
             importProfile=SoundService.profile;
@@ -68,8 +61,10 @@ public class MainActivity extends Activity {
             public void onProgressChanged(SeekBar b,int p,boolean u){SoundService.volume=p/100f;}
             public void onStartTrackingTouch(SeekBar b){} public void onStopTrackingTouch(SeekBar b){}
         });
-        Button start=new Button(this); start.setText("FAHR-SOUND STARTEN"); root.addView(start); start.setOnClickListener(v->{demoMode=false; requestStart();});
-        Button stop=new Button(this); stop.setText("STOPP"); root.addView(stop); stop.setOnClickListener(v->stopService(new Intent(this,SoundService.class)));
+        LinearLayout controls=new LinearLayout(this);controls.setOrientation(LinearLayout.HORIZONTAL);
+        Button start=new Button(this); start.setText("FAHR-SOUND STARTEN"); controls.addView(start,new LinearLayout.LayoutParams(0,-2,2)); start.setOnClickListener(v->{demoMode=false; requestStart();});
+        Button stop=new Button(this); stop.setText("STOPP");controls.addView(stop,new LinearLayout.LayoutParams(0,-2,1));stop.setOnClickListener(v->stopService(new Intent(this,SoundService.class)));
+        root.addView(controls);
         Button demo=new Button(this); demo.setText("DEMO IM STAND STARTEN"); root.addView(demo); demo.setOnClickListener(v->{demoMode=true; requestStart();});
         root.addView(label("Demo-Geschwindigkeit (0–160 km/h)",15)); demoSpeed=new SeekBar(this); demoSpeed.setMax(160); demoSpeed.setProgress((int)(SoundService.demoSpeed*3.6f)); root.addView(demoSpeed);
         demoSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
@@ -85,12 +80,29 @@ public class MainActivity extends Activity {
             new android.app.AlertDialog.Builder(this).setTitle("Audioquellen").setMessage(b2.toString("UTF-8")).setPositiveButton("OK",null).show();
         }catch(java.io.IOException ex){Toast.makeText(this,"Quellen nicht verfügbar",Toast.LENGTH_SHORT).show();}});
         TextView note=label("Vor der Fahrt einstellen. Handy sicher befestigen. Tesla: Bluetooth als Medienquelle wählen. Bei fehlendem GPS bleibt der Fahr-Sound stumm. Nicht während der Fahrt bedienen.",14); note.setPadding(0,24,0,0); root.addView(note);
+        TextView garageTitle=label("GARAGE · 17 FAHRZEUGE",20);garageTitle.setPadding(0,dp(18),0,dp(5));root.addView(garageTitle);
+        root.addView(label("Tippe auf ein Auto, um seinen Motorsound zu wählen.",13));
+        cards=new VehicleCard[VehicleCard.NAMES.length];
+        for(int i=0;i<cards.length;i+=2){
+            LinearLayout row=new LinearLayout(this);row.setOrientation(LinearLayout.HORIZONTAL);
+            for(int j=i;j<Math.min(i+2,cards.length);j++){
+                final int index=j;
+                VehicleCard card=new VehicleCard(this,j);cards[j]=card;
+                LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(136),1);lp.setMargins(dp(3),dp(4),dp(3),dp(4));
+                row.addView(card,lp);card.setOnClickListener(v->selectCar(index));
+            }
+            if(i+1==cards.length)row.addView(new android.view.View(this),new LinearLayout.LayoutParams(0,dp(136),1));
+            root.addView(row);
+        }
+        selectCar(SoundService.profile);
+
     }
     private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density+.5f);}
     private void selectCar(int index){
+        if(index<0||index>=VehicleCard.NAMES.length)return;
         SoundService.profile=index;getPreferences(0).edit().putInt("vehicle",index).apply();
         selectedCar.setText("Ausgewählt: "+VehicleCard.NAMES[index]);
-        for(VehicleCard card:cards)if(card!=null)card.setSelectedCar(card.index==index);
+        if(cards!=null)for(VehicleCard card:cards)if(card!=null)card.setSelectedCar(card.index==index);
     }
     @Override protected void onActivityResult(int request,int result,Intent data){
         super.onActivityResult(request,result,data);
