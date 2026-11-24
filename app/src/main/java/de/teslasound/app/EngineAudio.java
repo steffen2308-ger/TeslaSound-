@@ -33,7 +33,11 @@ final class EngineAudio {
         new Spec(1100,7500,220,0.12,new double[]{385,275,211,166,133,110},new double[]{0.0/8,1.0/8,2.0/8,3.0/8,4.0/8,5.0/8,6.0/8,7.0/8},new double[]{1,0.45,0.91,0.62,0.53,1,0.48,0.89},new double[]{83,182,410,880},new double[]{0.7,0.52,0.34,0.18},0.16,0.11),
         new Spec(950,9000,250,0.15,new double[]{390,270,205,162,133,109},new double[]{0.0/10,1.0/10,2.0/10,3.0/10,4.0/10,5.0/10,6.0/10,7.0/10,8.0/10,9.0/10},new double[]{1,0.95,0.98,0.93,0.99,0.94,1,0.95,0.97,0.94},new double[]{220,520,1150,2450},new double[]{0.3,0.44,0.52,0.32},0.08,0.04),
         new Spec(850,4300,100,0.46,new double[]{250,148,99,70},new double[]{0.0/4,1.0/4,2.0/4,3.0/4},new double[]{1,0.77,0.95,0.74},new double[]{100,228,510,1090},new double[]{0.58,0.47,0.32,0.2},0.21,0.2),
-        new Spec(850,9500,260,0.14,new double[]{410,292,219,169,135,111,94,80},new double[]{0.0/12,1.0/12,2.0/12,3.0/12,4.0/12,5.0/12,6.0/12,7.0/12,8.0/12,9.0/12,10.0/12,11.0/12},new double[]{1,0.97,0.99,0.94,1,0.96,0.98,0.95,1,0.97,0.99,0.95},new double[]{180,465,1050,2200},new double[]{0.29,0.43,0.51,0.31},0.1,0.05)
+        new Spec(850,9500,260,0.14,new double[]{410,292,219,169,135,111,94,80},new double[]{0.0/12,1.0/12,2.0/12,3.0/12,4.0/12,5.0/12,6.0/12,7.0/12,8.0/12,9.0/12,10.0/12,11.0/12},new double[]{1,0.97,0.99,0.94,1,0.96,0.98,0.95,1,0.97,0.99,0.95},new double[]{180,465,1050,2200},new double[]{0.29,0.43,0.51,0.31},0.1,0.05),
+        // 17: city bus, 7.7 l inline-six turbodiesel with torque-converter automatic.
+        new Spec(600,2300,150,0.50,new double[]{500,300,195,140,105,85},new double[]{0.0/6,1.0/6,2.0/6,3.0/6,4.0/6,5.0/6},new double[]{1,1,1,1,1,1},new double[]{55,120,300,700},new double[]{0.7,0.5,0.3,0.18},0.15,0.3),
+        // 18: Space Shuttle, rendered by RocketAudio; single ratio so the gearbox never shifts.
+        new Spec(1000,10000,0,0.30,new double[]{100},new double[]{0},new double[]{1},new double[]{100,200,400,800},new double[]{0.5,0.4,0.3,0.2},0,0)
     };
     private static final class Loop {
         final double base;final float[] data;double pos;
@@ -44,6 +48,8 @@ final class EngineAudio {
     }
     private final int rate;
     private final TrabantAudio trabant;
+    private final RocketAudio rocket;
+    static final int BUS=17, SHUTTLE=18;
     private double turbo=0,turboPhase=0,turboAir=0,previousLoad=0;
     private final Gearbox gearbox=new Gearbox();
     private final List<List<Loop>> recordings=new ArrayList<>();
@@ -61,6 +67,7 @@ final class EngineAudio {
     EngineAudio(AssetManager assets,int rate, File imported){
         this.rate=rate;
         trabant=new TrabantAudio(rate);
+        rocket=new RocketAudio(rate);
         try{String[] files=assets.list("trabant_phase");if(files!=null)for(String name:files)if(name.endsWith(".pcm")){
             double rpm=Double.parseDouble(name.substring(0,name.length()-4));
             try(InputStream in=assets.open("trabant_phase/"+name)){ByteArrayOutputStream b=new ByteArrayOutputStream();byte[] buf=new byte[8192];int n;while((n=in.read(buf))!=-1)b.write(buf,0,n);ByteBuffer bb=ByteBuffer.wrap(b.toByteArray()).order(ByteOrder.LITTLE_ENDIAN);float[] x=new float[bb.remaining()/2];for(int j=0;j<x.length;j++)x[j]=bb.getShort()/32768f;if(x.length==8192)trabiTables.add(new Loop(rpm,x));}
@@ -91,21 +98,29 @@ final class EngineAudio {
             list.sort(Comparator.comparingDouble(l->l.base));
         }
     }
-    void reset(){trabant.reset();for(EngineSynth e:synths)if(e!=null)e.reset();gearbox.reset();current=-1;shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
-    double rpm(){return gearbox.rpm;}
-    int gear(){return gearbox.gear;}
-    boolean shifting(){return gearbox.shiftLeft>0;}
-    boolean hasRecording(){return current>=0&&current!=4&&!recordings.get(current).isEmpty();}
+    void reset(){trabant.reset();rocket.reset();for(EngineSynth e:synths)if(e!=null)e.reset();gearbox.reset();current=-1;shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
+    /** Engine RPM, or thrust in percent for the Space Shuttle. */
+    double rpm(){return current==SHUTTLE?rocket.thrustPercent():gearbox.rpm;}
+    int gear(){return current==SHUTTLE?1:gearbox.gear;}
+    boolean shifting(){return current!=SHUTTLE&&gearbox.shiftLeft>0;}
+    boolean hasRecording(){return current>=0&&current!=4&&current!=SHUTTLE&&!recordings.get(current).isEmpty();}
     void render(short[] out,int mode,double speed,double acceleration,double volume,double dt){
         mode=Math.max(0,Math.min(SPECS.length-1,mode));
         Spec p=SPECS[mode];
-        if(current!=mode){trabant.reset();if(mode!=4){if(synths[mode]==null)synths[mode]=new EngineSynth(mode,SPECS[mode],rate);else synths[mode].reset();}gearbox.reset();current=mode;previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
+        if(current!=mode){trabant.reset();rocket.reset();if(mode!=4&&mode!=SHUTTLE){if(synths[mode]==null)synths[mode]=new EngineSynth(mode,SPECS[mode],rate);else synths[mode].reset();}gearbox.reset();current=mode;previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
+        if(mode==SHUTTLE){
+            rocket.control(speed,acceleration,dt);
+            for(int i=0;i<out.length;i++)out[i]=(short)(Math.max(-.97,Math.min(.97,rocket.next(volume)))*32767);
+            return;
+        }
         gearbox.update(p,speed,acceleration,dt);
         boolean shifting=shifting();
         if(shifting&&!previousShift)shiftSound=1;
         previousShift=shifting;
         double rpm=gearbox.rpm,load=gearbox.load;
         double cut=shifting?(.10+.82*Math.pow(1-gearbox.shiftLeft/gearbox.duration,2)):1;
+        // Torque-converter automatic: power is reduced, not cut, during a shift.
+        if(mode==BUS&&shifting)cut=.55+.45*(1-gearbox.shiftLeft/gearbox.duration);
         double targetAmp=volume*(.20+.80*Math.sqrt(load))*cut;
         if(mode==4)targetAmp=volume*(.24+.76*load)*cut;
         if(mode==4){
@@ -122,6 +137,7 @@ final class EngineAudio {
             return;
         }
         EngineSynth synth=synths[mode];
+        synth.setSpeed(speed);
         List<Loop> layers=recordings.get(mode);
         Loop lo=null,hi=null;
         double mix=0;

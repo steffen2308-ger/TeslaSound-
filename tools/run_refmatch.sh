@@ -6,9 +6,9 @@ refs=$1; outdir=$2
 mkdir -p "$outdir"
 classes=$(mktemp -d)
 javac -d "$classes" $(find tools/refmatch -name '*.java') \
-  app/src/main/java/de/teslasound/app/{EngineAudio,EngineSynth,Gearbox,TrabantAudio}.java
+  app/src/main/java/de/teslasound/app/{EngineAudio,EngineSynth,Gearbox,RocketAudio,TrabantAudio}.java
 : > "$outdir/results.jsonl"
-for mode in 0 1 2 3 5 6 7 8 9 10 11 12 13 14 15 16; do
+for mode in 0 1 2 3 5 6 7 8 9 10 11 12 13 14 15 16 17 18; do
   files=$(ls "$refs"/${mode}_*.wav 2>/dev/null | tr '\n' ' ' || true)
   if [ -z "$files" ]; then echo "mode $mode: no reference"; continue; fi
   echo "$mode" $files

@@ -25,7 +25,7 @@ public class MainActivity extends Activity {
             else if (SoundService.demo) status.setText(String.format(java.util.Locale.GERMANY,"DEMO  |  %.0f km/h",SoundService.speed * 3.6f));
             else if (!SoundService.gpsFresh()) status.setText("Warte auf genaues GPS …");
             else status.setText(String.format(java.util.Locale.GERMANY,"%.0f km/h  |  %+.2f m/s²",SoundService.speed * 3.6f,SoundService.acceleration));
-            engineStatus.setText(SoundService.running ? String.format(java.util.Locale.GERMANY,"%d U/min   •   Gang %d%s\n%s",SoundService.rpm,SoundService.gear,SoundService.shifting?"  •  SCHALTEN":"",SoundService.recorded?"Aufnahme + Motorsimulation":"Motorsimulation"):"Motor aus");
+            engineStatus.setText(!SoundService.running?"Motor aus":SoundService.profile==EngineAudio.SHUTTLE?String.format(java.util.Locale.GERMANY,"Schub %d %%\n%s",SoundService.rpm,SoundService.rpm==0?"Startbereit – losfahren zum Zünden":"Raketensimulation"):String.format(java.util.Locale.GERMANY,"%d U/min   •   Gang %d%s\n%s",SoundService.rpm,SoundService.gear,SoundService.shifting?"  •  SCHALTEN":"",SoundService.recorded?"Aufnahme + Motorsimulation":"Motorsimulation"));
             handler.postDelayed(this, 150);
         }
     };
@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
             new android.app.AlertDialog.Builder(this).setTitle("Audioquellen").setMessage(b2.toString("UTF-8")).setPositiveButton("OK",null).show();
         }catch(java.io.IOException ex){Toast.makeText(this,"Quellen nicht verfügbar",Toast.LENGTH_SHORT).show();}});
         TextView note=label("Vor der Fahrt einstellen. Handy sicher befestigen. Tesla: Bluetooth als Medienquelle wählen. Bei fehlendem GPS bleibt der Fahr-Sound stumm. Nicht während der Fahrt bedienen.",14); note.setPadding(0,24,0,0); root.addView(note);
-        TextView garageTitle=label("GARAGE · 17 FAHRZEUGE",20);garageTitle.setPadding(0,dp(18),0,dp(5));root.addView(garageTitle);
+        TextView garageTitle=label("GARAGE · "+VehicleCard.NAMES.length+" FAHRZEUGE",20);garageTitle.setPadding(0,dp(18),0,dp(5));root.addView(garageTitle);
         root.addView(label("Tippe auf ein Auto, um seinen Motorsound zu wählen.",13));
         cards=new VehicleCard[VehicleCard.NAMES.length];
         for(int i=0;i<cards.length;i+=2){

@@ -23,6 +23,8 @@ CARS = {
     13: (['Mercedes AMG GT3 sound', 'Mercedes-AMG GT engine and exhaust sound', 'SLS AMG GT3 sound'], [['amg']]),
     14: (['Lexus LFA engine and exhaust sound', 'Lexus LFA sound'], [['lfa']]),
     15: (['Volkswagen Beetle engine sound', 'VW Käfer Motor', 'Volkswagen Type 1 engine sound'], [['beetle'], ['käfer'], ['kafer'], ['type 1']]),
+    17: (['Mercedes-Benz Citaro engine sound', 'city bus engine sound', 'bus engine sound', 'Bus Motor Geräusch'], [['citaro'], ['bus']]),
+    18: (['Space Shuttle launch sound', 'Space Shuttle launch audio', 'STS launch sound', 'Space Shuttle liftoff'], [['shuttle'], ['sts']]),
     16: (['Lamborghini Revuelto sound', 'Lamborghini Aventador SVJ sound', 'Lamborghini Aventador engine and exhaust sound'], [['revuelto'], ['aventador']]),
 }
 AUDIO_MIME = ('audio/', 'video/webm', 'video/ogg', 'application/ogg')
@@ -56,7 +58,8 @@ def main():
                 low = title.lower()
                 if not info['mime'].startswith(AUDIO_MIME) or info['size'] > 80e6: continue
                 if not any(all(w in low for w in g) for g in groups): continue
-                if any(w in low for w in ('shuttle', 'space', 'rocket', 'launch and')): continue
+                if mode != 18 and any(w in low for w in ('shuttle', 'space', 'rocket', 'launch and')): continue
+                if mode == 17 and any(w in low for w in ('bus stop', 'busy', 'omnibus', 'bush')): continue
                 if any(title == p['title'] for p in picks): continue
                 picks.append({'title': title, 'url': info['url'], 'mime': info['mime']})
                 if len(picks) >= 2: break

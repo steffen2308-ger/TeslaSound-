@@ -10,14 +10,14 @@ cat > "$tmp/android/util/Log.java" <<'EOF'
 package android.util;
 public class Log { public static int w(String a,String b,Throwable t){return 0;} }
 EOF
-cp app/src/main/java/de/teslasound/app/{EngineAudio,EngineSynth,Gearbox,TrabantAudio}.java "$tmp/de/teslasound/app/"
+cp app/src/main/java/de/teslasound/app/{EngineAudio,EngineSynth,Gearbox,RocketAudio,TrabantAudio}.java "$tmp/de/teslasound/app/"
 cat > "$tmp/de/teslasound/app/Test.java" <<'EOF'
 package de.teslasound.app;
 public class Test {
  public static void main(String[] args){
  EngineAudio e=new EngineAudio(new android.content.res.AssetManager(),44100,new java.io.File("/no-samples"));
  short[] x=new short[256];
- for(int mode=0;mode<17;mode++){
+ for(int mode=0;mode<EngineAudio.SPECS.length;mode++){
    e.reset();long energy=0;int max=0;
    for(int i=0;i<1500;i++){
      double t=i*256.0/44100, speed=Math.min(24,t*3);
@@ -43,7 +43,7 @@ public class Test {
    if(min<.005||max/min>1.25)throw new AssertionError("unstable envelope "+rpm+" "+max/min);
    System.out.printf("Trabant %d RPM: RMS variation %.2f, firing count verified%n",rpm,max/min);
  }
- System.out.println("17 engine profiles: audio generated, finite RPM and mute verified");
+ System.out.println(EngineAudio.SPECS.length+" vehicle profiles: audio generated, finite RPM and mute verified");
  }
 }
 EOF

@@ -3,7 +3,7 @@ import json, sys
 
 NAMES = ["Formel 1", "V8 klassisch", "Diesel", "Benziner", "Trabant", "Porsche 911 GT3 RS", "Mustang GT Muscle",
          "Ferrari F12", "Dodge Hellcat", "Lamborghini Veneno", "Audi RS6 Avant", "Bugatti Chiron",
-         "BMW M3 Competition", "Mercedes-AMG GT3", "Lexus LFA", "VW Käfer 1300", "Lamborghini Revuelto"]
+         "BMW M3 Competition", "Mercedes-AMG GT3", "Lexus LFA", "VW Käfer 1300", "Lamborghini Revuelto", "Stadtbus", "Space Shuttle"]
 sources = json.load(open(sys.argv[1]))
 rows = []
 for l in open(sys.argv[2]):

@@ -70,11 +70,18 @@ final class EngineSynth {
         /*14 LFA V10   */ new Profile(ALT10, .45,.48,12000,1400,5740,.30,.30,.00,.00,.06,.90,.35,0,0,0,0,0,0,0),
         /*15 Käfer     */ new Profile(BOXER4,.50,.55,1500,2700,5400,.30,.80,.10,.00,.35,.15,.10,0,0,0,0,1,0,0),
         /*16 Revuelto  */ new Profile(ALT12, .45,.48,11200,1150,7600,.30,.25,.00,.00,.06,.80,.50,0,0,0,0,0,1,0),
+        /*17 Stadtbus  */ new Profile(new int[]{0,0,0,0,0,0},.45,.45,6000,500,2500,.50,.40,.00,.70,.12,.15,.00,1,3800,0,0,0,0,0),
+        /*18 Space Shuttle (RocketAudio, entry unused) */ new Profile(I4,.4,.4,3000,1000,2000,.5,.5,0,0,0,0,0,0,0,0,0,0,0,0),
     };
 
     // Exhaust flow noise per vehicle (tuned against reference recordings).
-    private static final double[] RASP={.30,.35,.20,.35,0,.35,.35,.30,.20,.35,.35,.35,.35,.80,.30,.80,.55};
+    private static final double[] RASP={.30,.35,.20,.35,0,.35,.35,.30,.20,.35,.35,.35,.35,.80,.30,.80,.55,.25,0};
     static{for(int i=0;i<PROFILES.length;i++)PROFILES[i].rasp=RASP[i];}
+    /** Pneumatic brake hiss when coming to a stop (buses). */
+    private static final boolean[] AIR_BRAKE=new boolean[PROFILES.length];
+    /** Torque-converter automatic: shifts reduce combustion only mildly. */
+    private static final boolean[] AUTOMATIC=new boolean[PROFILES.length];
+    static{AIR_BRAKE[17]=true;AUTOMATIC[17]=true;}
 
     private static final int RING=4096, MASK=RING-1;
     private final int rate;
@@ -90,6 +97,8 @@ final class EngineSynth {
     private final double[] knockK, valveK, crackK;
     private final Random random;
     private final long seed;
+    private final boolean airBrake, automatic;
+    private double speed=0, movedFor=0, air=0, airLow=0, airBand=0, airHp=0;
     private int cursor=0, firing=0;
     private double phase=1, interval=1, mixture=1, gain=1;
     private double lp1=0, lp2=0, dc=0;
@@ -107,6 +116,7 @@ final class EngineSynth {
         int maxBank=0;for(int b:pr.banks)maxBank=Math.max(maxBank,b);
         nb=maxBank+1;
         seed=7919L*(mode+1);random=new Random(seed);
+        airBrake=AIR_BRAKE[mode];automatic=AUTOMATIC[mode];
         kernels=new double[nb][3][];rings=new double[nb][RING];pipes=new double[nb][];
         pipeCursor=new int[nb];bankDelay=new int[nb];pipeDamp=new double[nb];raspEnv=new double[nb];raspLp=new double[nb];
         double pipeHz=spec.resonances[0];
@@ -178,11 +188,20 @@ final class EngineSynth {
         Arrays.fill(mech,0);Arrays.fill(pipeCursor,0);Arrays.fill(pipeDamp,0);Arrays.fill(raspEnv,0);Arrays.fill(raspLp,0);Arrays.fill(turboPhase,0);
         cursor=0;firing=0;phase=1;interval=1;mixture=1;lp1=lp2=dc=0;
         intakeEnv=intLow=intBand=0;crackEnv=crackLp=0;overrun=0;prevLoad=0;prevShift=false;
-        spool=0;bovEnv=bovLow=bovBand=0;blowerLoad=blowerPhase=fanPhase=fanAm=motorPhase=gearPhase=0;accessory=0;
+        spool=0;bovEnv=bovLow=bovBand=0;speed=0;movedFor=0;air=airLow=airBand=airHp=0;blowerLoad=blowerPhase=fanPhase=fanAm=motorPhase=gearPhase=0;accessory=0;
         random.setSeed(seed);
     }
     /** Accessory sound (turbo, blower, fan, e-motor, gears) of the last sample, unscaled by recordings. */
     double accessory(){return accessory;}
+    /** Vehicle speed in m/s, set once per audio block; used for stop-dependent sounds. */
+    void setSpeed(double metresPerSecond){
+        if(airBrake){
+            if(metresPerSecond>2.5)movedFor=Math.min(10,movedFor+.006);
+            // Coming to a halt after driving: brake cylinders vent with a sharp "pssht".
+            if(speed>=.4&&metresPerSecond<.4&&movedFor>.5){air=1;movedFor=0;}
+        }
+        speed=metresPerSecond;
+    }
 
     double next(double rpm,double load,boolean shifting){
         double y=engine(rpm,load,shifting);
@@ -222,7 +241,7 @@ final class EngineSynth {
             double force=cylGain[k]*(.35+.65*load)*mixture;
             // Cam overlap at idle: some cylinders burn weakly (lumpy idle).
             if(pr.lope>0&&(k%4==1||k%4==2))force*=1-pr.lope*.45*idleness*(.5+random.nextDouble());
-            if(shifting)force*=.18;
+            if(shifting)force*=automatic?.75:.18;
             if(lifted)force*=.55;
             double color=clamp(load*.65+norm*.35,0,1)*2;
             int a=Math.min(1,(int)color);double b=color-a;
@@ -334,6 +353,15 @@ final class EngineSynth {
             // Electric motor and inverter whine, mainly audible at low engine speed.
             motorPhase+=2*Math.PI*(rpm/60*11)/rate;if(motorPhase>2*Math.PI)motorPhase-=2*Math.PI;
             out+=pr.hybrid*.018*load*(1-.7*norm)*(Math.sin(motorPhase)+.3*Math.sin(3*motorPhase));
+        }
+        if(air>1e-4){
+            // Air release: bright noise, starts with a hard edge and fades over about a second.
+            double f=2*Math.sin(Math.PI*3800/rate);
+            double noise=(random.nextDouble()*2-1)*air;
+            airLow+=f*airBand;double high=noise-airLow-.8*airBand;airBand+=f*high;
+            airHp+=.3*(noise-airHp);
+            out+=airBand*.10+(noise-airHp)*.05*air;
+            air*=Math.exp(-1/(rate*.45));
         }
         if(pr.gearWhine>0){
             // Straight-cut race gearbox.

@@ -4,9 +4,9 @@ import android.graphics.*;
 import android.view.View;
 
 final class VehicleCard extends View {
-    static final String[] NAMES={"Formel 1","V8 klassisch","Diesel","Benziner","Trabant","Porsche 911 GT3 RS","Mustang GT Muscle","Ferrari F12","Dodge Hellcat","Lamborghini Veneno","Audi RS6 Avant","Bugatti Chiron","BMW M3 Competition","Mercedes-AMG GT3","Lexus LFA","VW Käfer 1300","Lamborghini Revuelto"};
-    static final String[] ENGINES={"V8 · 18.000 RPM","V8 · 6.500 RPM","R4 Diesel","R4 Benzin","R2 Zweitakt","Boxer 6 · 9.000 RPM","V8 · 7.400 RPM","V12 · 8.900 RPM","V8 Kompressor","V12 · 8.500 RPM","V8 Biturbo","W16 · 4 Turbos","R6 Biturbo","V8 Rennmotor","V10 · 9.000 RPM","Boxer 4 · luftgekühlt","V12 Hybrid · 9.500 RPM"};
-    static final int[] COLORS={0xffe33f36,0xffb35236,0xffa0a9b4,0xff53a0b7,0xff92bfaa,0xffe9ebea,0xff386ac9,0xffd82e37,0xff772d3c,0xffc2c7ce,0xff647a87,0xff2b65b8,0xff98b75c,0xffb3bbc4,0xffe6e6e3,0xffc7a15f,0xffef8a38};
+    static final String[] NAMES={"Formel 1","V8 klassisch","Diesel","Benziner","Trabant","Porsche 911 GT3 RS","Mustang GT Muscle","Ferrari F12","Dodge Hellcat","Lamborghini Veneno","Audi RS6 Avant","Bugatti Chiron","BMW M3 Competition","Mercedes-AMG GT3","Lexus LFA","VW Käfer 1300","Lamborghini Revuelto","Stadtbus","Space Shuttle"};
+    static final String[] ENGINES={"V8 · 18.000 RPM","V8 · 6.500 RPM","R4 Diesel","R4 Benzin","R2 Zweitakt","Boxer 6 · 9.000 RPM","V8 · 7.400 RPM","V12 · 8.900 RPM","V8 Kompressor","V12 · 8.500 RPM","V8 Biturbo","W16 · 4 Turbos","R6 Biturbo","V8 Rennmotor","V10 · 9.000 RPM","Boxer 4 · luftgekühlt","V12 Hybrid · 9.500 RPM","R6 Turbodiesel · Automatik","3 Haupttriebwerke + 2 Booster"};
+    static final int[] COLORS={0xffe33f36,0xffb35236,0xffa0a9b4,0xff53a0b7,0xff92bfaa,0xffe9ebea,0xff386ac9,0xffd82e37,0xff772d3c,0xffc2c7ce,0xff647a87,0xff2b65b8,0xff98b75c,0xffb3bbc4,0xffe6e6e3,0xffc7a15f,0xffef8a38,0xfff2c230,0xffeef1f4};
     // Model-specific hand-drawn side profiles, normalized to a 300 x 100 canvas.
     static final String[] BODY={
         "M12 70 L16 62 L53 61 L75 43 L112 45 L128 59 L181 58 L191 39 L225 39 L232 62 L277 61 L288 66 L288 77 L12 77 Z",
@@ -25,7 +25,9 @@ final class VehicleCard extends View {
         "M11 74 L18 57 L88 45 L127 24 L170 24 L205 48 L263 51 L287 67 L283 83 L18 83 Z",
         "M13 74 L19 57 L89 48 L130 25 L175 25 L220 47 L268 50 L285 67 L279 82 L20 82 Z",
         "M25 74 Q30 55 61 49 Q77 11 139 12 Q188 11 215 46 Q260 48 273 71 L269 81 L26 81 Z",
-        "M11 74 L21 64 L79 49 L121 22 L161 24 L213 48 L260 48 L288 65 L284 82 L16 82 Z"
+        "M11 74 L21 64 L79 49 L121 22 L161 24 L213 48 L260 48 L288 65 L284 82 L16 82 Z",
+        "M8 80 L8 30 Q8 22 18 22 L282 22 Q292 22 292 32 L292 80 Z",
+        "M10 66 L40 58 L190 56 Q250 56 288 64 L250 72 L40 72 Z"
     };
     final int index;
     private boolean chosen;

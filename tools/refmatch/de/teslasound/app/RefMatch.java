@@ -20,12 +20,12 @@ public class RefMatch {
         for(int i=1;i<args.length;i++)frames.addAll(loudFrames(bandFrames(readWav(args[i])),.55));
         double[] ref=normalise(mean(frames));
         EngineSynth.Profile cur=EngineSynth.PROFILES[mode];
-        double[] baseCurve=synthCurve(mode,cur);
+        double[] baseCurve=mode==EngineAudio.SHUTTLE?rocketCurve():synthCurve(mode,cur);
         double base=dist(ref,baseCurve);
         double bestD=base;EngineSynth.Profile best=cur;double[] bestCurve=baseCurve;
         // Coordinate descent over muffler cutoffs, brightness, pulse sharpness and flow noise.
         double[] mul={.5,.7,1,1.4,2,3},bright={.3,.5,.7,.9,1.1},sharpMul={.6,.8,1.25,1.6},rasp={0,.1,.2,.35,.55,.8};
-        for(int round=0;round<3;round++){
+        for(int round=0;round<(mode==EngineAudio.SHUTTLE?0:3);round++){
             for(int param=0;param<5;param++){
                 double[] cand=param==0||param==1?mul:param==2?bright:param==3?sharpMul:rasp;
                 EngineSynth.Profile start=best;
@@ -63,6 +63,17 @@ public class RefMatch {
             y[i]=s.next(rpm,load,false)+s.accessory();
         }
         return normalise(mean(loudFrames(bandFrames(y),.2)));
+    }
+
+    /** Launch: ignition sequence, then full thrust while accelerating. */
+    static double[] rocketCurve(){
+        RocketAudio r=new RocketAudio(SR);
+        int block=256,n=SR*20;double[] y=new double[n];double dt=block/(double)SR,speed=0;
+        for(int i=0;i<n;i++){
+            if(i%block==0){double t=i/(double)SR,acc=t<1?0:3;speed+=acc*dt;r.control(speed,acc,dt);}
+            y[i]=r.next(.8);
+        }
+        return normalise(mean(loudFrames(bandFrames(Arrays.copyOfRange(y,SR*5,n)),.2)));
     }
 
     static double[] readWav(String path)throws IOException{
