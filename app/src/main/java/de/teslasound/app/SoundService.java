@@ -134,13 +134,13 @@ public class SoundService extends Service implements SensorEventListener, Locati
                 if(wasDemo!=demo || (valid&&!wasValid))engine.reset();
                 wasDemo=demo;wasValid=valid;
                 if(demo&&autoRun){
-                    if(run==null||runProfile!=profile){run=new AutoRun(profile);runProfile=profile;engine.setAutoShift(EngineAudio.RUN_SHIFT_RPM[profile]);}
+                    if(run==null||runProfile!=profile){run=new AutoRun(profile);runProfile=profile;}
                     previousDemo=simSpeed;
                     double a=run.acceleration(engine,simSpeed,dt);
                     simSpeed+=a*dt;simAccel=a;speed=(float)simSpeed;
-                    if(run.done())autoRun=false;
+                    if(run.done()){autoRun=false;run=null;runProfile=-1;engine.forceGear(0);}
                 }else if(demo){
-                    if(run!=null){run=null;runProfile=-1;engine.setAutoShift(0);}
+                    if(run!=null){run=null;runProfile=-1;engine.forceGear(0);}
                     if(lastDemoShift!=demoShift){lastDemoShift=demoShift;demoDip=.48; }
                     previousDemo=simSpeed;
                     double target=demoSpeed;
@@ -148,7 +148,7 @@ public class SoundService extends Service implements SensorEventListener, Locati
                     simSpeed+=Math.max(-3.5*dt,Math.min(4.0*dt,(target-simSpeed)*dt*2.6));
                     simAccel=.83*simAccel+.17*(simSpeed-previousDemo)/dt;
                     speed=(float)simSpeed;
-                }else{autoRun=false;if(run!=null){run=null;runProfile=-1;engine.setAutoShift(0);}simSpeed=valid?speed:0;simAccel=valid?acceleration:0;lastDemoShift=demoShift;demoDip=0;}
+                }else{autoRun=false;if(run!=null){run=null;runProfile=-1;engine.forceGear(0);}simSpeed=valid?speed:0;simAccel=valid?acceleration:0;lastDemoShift=demoShift;demoDip=0;}
                 engine.render(pcm,profile,simSpeed,simAccel,valid?volume:0,dt);
                 // The horn works even without GPS, like a real one.
                 hornSound.mix(pcm,profile,horn,volume);

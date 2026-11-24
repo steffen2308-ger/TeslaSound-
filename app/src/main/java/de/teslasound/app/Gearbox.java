@@ -13,8 +13,8 @@ final class Gearbox {
     double rpm, load, shiftLeft, clock, lastShift=-10, smoothSpeed;
     double accFast, accSlow, pullTime;
     double duration=.3, fromRpm;
-    /** When above zero (automatic acceleration run), upshift exactly at this RPM. */
-    double autoShiftRpm=0;
+    /** When above zero (automatic acceleration run), the gearbox selects exactly this gear. */
+    int forcedGear=0;
     boolean initialized;
     private static double clamp(double x,double a,double b){return Math.max(a,Math.min(b,x));}
     void reset(){gear=1;rpm=0;load=0;shiftLeft=0;clock=0;lastShift=-10;smoothSpeed=0;accFast=0;accSlow=0;pullTime=0;initialized=false;}
@@ -48,8 +48,9 @@ final class Gearbox {
         boolean dropout=pullTime>.5 && accSlow>.55 && accFast<Math.max(.25,.4*accSlow);
 
         if(v<.7){gear=1;}
-        else if(autoShiftRpm>0){
-            if(canUp && shiftLeft==0 && clock-lastShift>.4 && rpm>=autoShiftRpm && nextRpm>p.idle)shift(p,gear+1);
+        else if(forcedGear>0){
+            int want=Math.max(1,Math.min(p.ratios.length,forcedGear));
+            if(want!=gear && shiftLeft==0 && clock-lastShift>.25)shift(p,want);
         }
         else if(readyUp && canUp && dropout && shaft>p.idle+.20*range && nextRpm>p.idle*1.05){
             shift(p,gear+1);pullTime=0;

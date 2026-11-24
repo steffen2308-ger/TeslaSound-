@@ -40,3 +40,7 @@ Engine tone tuned against real recordings from Wikimedia Commons: CI downloads t
 - Gearbox: upshift point depends on acceleration (gentle driving around a quarter of the rev range, full throttle near the redline). A shift is recognised when acceleration that had been building suddenly drops away (like pressing the clutch), if the RPM is in a sensible range.
 - Horn button (hold): vehicle-typical horn, e.g. single thin horn for Trabant and Beetle, low loud pair for the bus, master alarm for the Space Shuttle. Works without GPS.
 - Automatic acceleration run to top speed in demo mode, with vehicle-typical 0-100 km/h time, shift RPM, power-to-weight ratio and top speed (approximate published figures).
+
+## 0.7.1
+- Real gear ratios (gear ratios × final drive / tyre circumference) for Käfer 1300 (3.80/2.06/1.26/0.89, final 4.375), Trabant 601 (23.5 km/h per 1000 rpm in 4th), petrol and diesel four-cylinders, Camaro Z28, Mustang GT, GT3 RS, Aventador/Veneno, RS6, M3, LFA and city bus.
+- Automatic run now drives like a real driver: early upshifts at the car's everyday RPM (diesel 2000, most petrol 2500, sports engines 3000-4000, Trabant 3300), engine power scales with RPM, downshift only when the current gear can no longer pull near top speed. Trabant 0-100 km/h corrected to about 40 s.
