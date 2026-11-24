@@ -123,7 +123,7 @@ public class SoundService extends Service implements SensorEventListener, Locati
             track=out;if(!audioRunning)return;out.play();
             short[] pcm=new short[256];
             EngineAudio engine=new EngineAudio(getAssets(),rate,new java.io.File(getFilesDir(),"engines"));
-            Horn hornSound=new Horn(rate);
+            Horn hornSound=new Horn(getAssets(),rate);
             AutoRun run=null;int runProfile=-1;
             double simSpeed=0,simAccel=0,previousDemo=0, demoDip=0;
             int lastDemoShift=demoShift;

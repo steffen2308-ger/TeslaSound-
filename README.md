@@ -44,3 +44,6 @@ Engine tone tuned against real recordings from Wikimedia Commons: CI downloads t
 ## 0.7.1
 - Real gear ratios (gear ratios × final drive / tyre circumference) for Käfer 1300 (3.80/2.06/1.26/0.89, final 4.375), Trabant 601 (23.5 km/h per 1000 rpm in 4th), petrol and diesel four-cylinders, Camaro Z28, Mustang GT, GT3 RS, Aventador/Veneno, RS6, M3, LFA and city bus.
 - Automatic run now drives like a real driver: early upshifts at the car's everyday RPM (diesel 2000, most petrol 2500, sports engines 3000-4000, Trabant 3300), engine power scales with RPM, downshift only when the current gear can no longer pull near top speed. Trabant 0-100 km/h corrected to about 40 s.
+
+## 0.7.2
+Horns are now recorded-style samples per vehicle (generated with ElevenLabs Sound Effects from vehicle-specific descriptions, four variants each; the cleanest single steady honk was picked automatically by tools/prepare_horns.py, see analysis/horn_selection.json). Tapping gives a short honk, holding loops the steady part seamlessly, releasing fades out. The procedural horn remains as a fallback.
