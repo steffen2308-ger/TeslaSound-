@@ -23,18 +23,21 @@ public class RefMatch {
         double[] baseCurve=synthCurve(mode,cur);
         double base=dist(ref,baseCurve);
         double bestD=base;EngineSynth.Profile best=cur;double[] bestCurve=baseCurve;
-        double[] f={.5,.7,1,1.4,2},br={.3,.5,.7,.9,1.1};
-        for(double a:f)for(double b:f)for(double c:br){
-            double lo=cur.mufLo*a,hi=Math.min(16000,Math.max(lo*1.15,cur.mufHi*b));
-            EngineSynth.Profile p=cur.tone(lo,hi,c,cur.sharp);
-            double[] curve=synthCurve(mode,p);double d=dist(ref,curve);
-            if(d<bestD){bestD=d;best=p;bestCurve=curve;}
-        }
-        EngineSynth.Profile stage=best;
-        for(double s:new double[]{.6,.8,1.25,1.6}){
-            EngineSynth.Profile p=stage.tone(stage.mufLo,stage.mufHi,stage.bright,cur.sharp*s);
-            double[] curve=synthCurve(mode,p);double d=dist(ref,curve);
-            if(d<bestD){bestD=d;best=p;bestCurve=curve;}
+        // Coordinate descent over muffler cutoffs, brightness, pulse sharpness and flow noise.
+        double[] mul={.5,.7,1,1.4,2,3},bright={.3,.5,.7,.9,1.1},sharpMul={.6,.8,1.25,1.6},rasp={0,.1,.2,.35,.55,.8};
+        for(int round=0;round<3;round++){
+            for(int param=0;param<5;param++){
+                double[] cand=param==0||param==1?mul:param==2?bright:param==3?sharpMul:rasp;
+                EngineSynth.Profile start=best;
+                for(double v:cand){
+                    double lo=start.mufLo,hi=start.mufHi,br=start.bright,sh=start.sharp,ra=start.rasp;
+                    if(param==0)lo=cur.mufLo*v;else if(param==1)hi=cur.mufHi*v;else if(param==2)br=v;else if(param==3)sh=cur.sharp*v;else ra=v;
+                    hi=Math.min(16000,Math.max(lo*1.15,hi));
+                    EngineSynth.Profile p=cur.tone(lo,hi,br,sh,ra);
+                    double[] curve=synthCurve(mode,p);double d=dist(ref,curve);
+                    if(d<bestD-1e-3){bestD=d;best=p;bestCurve=curve;}
+                }
+            }
         }
         StringBuilder o=new StringBuilder();
         o.append("{\"mode\":").append(mode).append(",\"frames\":").append(frames.size())
@@ -121,7 +124,11 @@ public class RefMatch {
         avg/=p.length;for(int j=0;j<p.length;j++)db[j]-=avg;
         return db;
     }
-    static double dist(double[] a,double[] b){double s=0;for(int j=0;j<a.length;j++)s+=(a[j]-b[j])*(a[j]-b[j]);return Math.sqrt(s/a.length);}
+    /** RMS difference from 80 Hz up; lower bands mostly reflect microphone and wind, not the car. */
+    static double dist(double[] a,double[] b){
+        double ma=0,mb=0;int n=0;for(int j=2;j<a.length;j++){ma+=a[j];mb+=b[j];n++;}ma/=n;mb/=n;
+        double s=0;for(int j=2;j<a.length;j++){double d=(a[j]-ma)-(b[j]-mb);s+=d*d;}return Math.sqrt(s/n);
+    }
     static String arr(double[] a){StringBuilder s=new StringBuilder("[");for(int i=0;i<a.length;i++){if(i>0)s.append(',');s.append(String.format(Locale.ROOT,"%.1f",a[i]));}return s.append(']').toString();}
 
     static void fft(double[] re,double[] im){

@@ -8,7 +8,7 @@ import json, pathlib, subprocess, sys, urllib.parse, urllib.request
 UA = 'TeslaSoundReferenceAnalysis/1.0 (https://github.com/steffen2308-ger/TeslaSound-)'
 # mode -> (search queries, groups of words; a title must contain all words of at least one group)
 CARS = {
-    0: (['Formula 1 V8 engine sound', 'Formula One car engine sound', 'F1 car sound'], [['formula'], ['f1 ']]),
+    0: (['Formula 1 V8 engine sound', 'Formula One car engine sound', 'F1 car sound', 'Formula 1 car', 'Grand Prix car engine sound', 'Formel 1 Motor'], [['formula'], ['f1'], ['formel'], ['grand prix']]),
     1: (['Chevrolet Camaro engine sound', 'Chevrolet Corvette C3 sound', 'V8 engine sound'], [['camaro'], ['chevelle'], ['corvette'], ['v8']]),
     2: (['diesel engine car sound', 'TDI engine sound', 'diesel engine idle'], [['diesel'], ['tdi']]),
     3: (['four cylinder engine sound car', 'Honda Civic engine sound', 'Volkswagen Golf engine sound'], [['civic'], ['cylinder'], ['golf']]),
@@ -56,6 +56,7 @@ def main():
                 low = title.lower()
                 if not info['mime'].startswith(AUDIO_MIME) or info['size'] > 80e6: continue
                 if not any(all(w in low for w in g) for g in groups): continue
+                if any(w in low for w in ('shuttle', 'space', 'rocket', 'launch and')): continue
                 if any(title == p['title'] for p in picks): continue
                 picks.append({'title': title, 'url': info['url'], 'mime': info['mime']})
                 if len(picks) >= 2: break

@@ -22,7 +22,9 @@ jobs:
       - name: Fetch reference recordings
         run: python3 tools/fetch_references.py refs
       - name: Compare and tune
-        run: bash tools/run_refmatch.sh refs analysis | tee -a "$GITHUB_STEP_SUMMARY"
+        run: |
+          set -o pipefail
+          bash tools/run_refmatch.sh refs analysis | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Commit results
         run: |
           cp refs/sources.json analysis/

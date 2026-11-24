@@ -25,6 +25,7 @@ final class EngineSynth {
         final double rough, lope, knock, valve, intake, pops;
         final int turbos; final double turboHz, bov;
         final double blower, fan, hybrid, gearWhine;
+        double rasp; // broadband exhaust flow noise per combustion (set from RASP)
         Profile(int[] banks,double pipeFb,double pipeMix,double sharp,double mufLo,double mufHi,double bright,
                 double rough,double lope,double knock,double valve,double intake,double pops,
                 int turbos,double turboHz,double bov,double blower,double fan,double hybrid,double gearWhine){
@@ -33,8 +34,9 @@ final class EngineSynth {
             this.turbos=turbos;this.turboHz=turboHz;this.bov=bov;this.blower=blower;this.fan=fan;this.hybrid=hybrid;this.gearWhine=gearWhine;
         }
         /** Copy with a different exhaust tone (muffler cutoffs, brightness, pulse sharpness). */
-        Profile tone(double mufLo,double mufHi,double bright,double sharp){
-            return new Profile(banks,pipeFb,pipeMix,sharp,mufLo,mufHi,bright,rough,lope,knock,valve,intake,pops,turbos,turboHz,bov,blower,fan,hybrid,gearWhine);
+        Profile tone(double mufLo,double mufHi,double bright,double sharp,double rasp){
+            Profile p=new Profile(banks,pipeFb,pipeMix,sharp,mufLo,mufHi,bright,rough,lope,knock,valve,intake,pops,turbos,turboHz,bov,blower,fan,hybrid,gearWhine);
+            p.rasp=rasp;return p;
         }
     }
 
@@ -69,6 +71,10 @@ final class EngineSynth {
         /*16 Revuelto  */ new Profile(ALT12, .45,.48,7000,2300,7600, .90, .25,.00,.00,.06,.80,.50, 0,   0, 0, 0,0,1,0),
     };
 
+    // Exhaust flow noise per vehicle (tuned against reference recordings).
+    private static final double[] RASP={.30,.20,.20,.20,0,.30,.25,.30,.25,.30,.15,.10,.20,.30,.30,.25,.30};
+    static{for(int i=0;i<PROFILES.length;i++)PROFILES[i].rasp=RASP[i];}
+
     private static final int RING=4096, MASK=RING-1;
     private final int rate;
     private final Profile pr;
@@ -78,7 +84,7 @@ final class EngineSynth {
     private final double[][] rings;       // per-bank exhaust input
     private final double[][] pipes;       // per-bank pipe delay lines
     private final int[] pipeCursor, bankDelay;
-    private final double[] pipeDamp, cylGain;
+    private final double[] pipeDamp, cylGain, raspEnv, raspLp;
     private final double[] mech=new double[RING];
     private final double[] knockK, valveK, crackK;
     private final Random random;
@@ -101,7 +107,7 @@ final class EngineSynth {
         nb=maxBank+1;
         seed=7919L*(mode+1);random=new Random(seed);
         kernels=new double[nb][3][];rings=new double[nb][RING];pipes=new double[nb][];
-        pipeCursor=new int[nb];bankDelay=new int[nb];pipeDamp=new double[nb];
+        pipeCursor=new int[nb];bankDelay=new int[nb];pipeDamp=new double[nb];raspEnv=new double[nb];raspLp=new double[nb];
         double pipeHz=spec.resonances[0];
         for(int b=0;b<nb;b++){
             // Banks differ slightly in pipe length, header length and therefore mode tuning.
@@ -168,7 +174,7 @@ final class EngineSynth {
     void reset(){
         for(double[] r:rings)Arrays.fill(r,0);
         for(double[] p:pipes)Arrays.fill(p,0);
-        Arrays.fill(mech,0);Arrays.fill(pipeCursor,0);Arrays.fill(pipeDamp,0);Arrays.fill(turboPhase,0);
+        Arrays.fill(mech,0);Arrays.fill(pipeCursor,0);Arrays.fill(pipeDamp,0);Arrays.fill(raspEnv,0);Arrays.fill(raspLp,0);Arrays.fill(turboPhase,0);
         cursor=0;firing=0;phase=1;interval=1;mixture=1;lp1=lp2=dc=0;
         intakeEnv=intLow=intBand=0;crackEnv=crackLp=0;overrun=0;prevLoad=0;prevShift=false;
         spool=0;bovEnv=bovLow=bovBand=0;blowerLoad=blowerPhase=fanPhase=fanAm=motorPhase=gearPhase=0;accessory=0;
@@ -221,6 +227,8 @@ final class EngineSynth {
             int a=Math.min(1,(int)color);double b=color-a;
             double frac=clamp(phase/Math.max(step,1e-9),0,1);
             addKernel(rings[bank],bankDelay[bank],kernels[bank][a],kernels[bank][a+1],b,force,frac);
+            // Turbulent gas rushing out of the opened exhaust valve.
+            raspEnv[bank]=Math.min(2,raspEnv[bank]+pr.rasp*force*(.4+.6*load));
             // Pressure-rise knock of compression ignition; loudest at idle and under load.
             if(pr.knock>0)addClick(knockK,0,pr.knock*.55*(.55+.45*load+.4*idleness)*(.8+.4*random.nextDouble()));
             // Valvetrain tick, offset from combustion, masked as load rises.
@@ -240,8 +248,15 @@ final class EngineSynth {
         }
         // Per-bank exhaust: direct pulse plus reflections in its own pipe.
         double exhaust=0;
+        double raspHp=coef(500,rate),raspDecay=Math.exp(-1/(rate*.004));
         for(int b=0;b<nb;b++){
             double pressure=rings[b][cursor];rings[b][cursor]=0;
+            if(raspEnv[b]>1e-5){
+                double noise=(random.nextDouble()*2-1)*raspEnv[b];
+                raspLp[b]+=raspHp*(noise-raspLp[b]);
+                pressure+=(noise-raspLp[b])*.6;
+                raspEnv[b]*=raspDecay;
+            }
             double[] pipe=pipes[b];
             double out=pipe[pipeCursor[b]];
             pipeDamp[b]+=(.30+.15*load)*(out-pipeDamp[b]);
