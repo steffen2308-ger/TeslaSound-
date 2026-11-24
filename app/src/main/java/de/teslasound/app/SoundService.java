@@ -11,7 +11,9 @@ import android.os.*;
 public class SoundService extends Service implements SensorEventListener, LocationListener {
     static volatile boolean running=false, demo=false;
     static volatile float speed=0, acceleration=0, volume=.30f, demoSpeed=0;
-    static volatile int profile=0;
+    static volatile int profile=0, rpm=0, gear=1;
+    static volatile boolean shifting=false, recorded=false;
+    static volatile int demoShift=0;
     private static volatile long lastFix=0;
     private volatile boolean audioRunning=false;
     private volatile AudioTrack track;
@@ -59,7 +61,7 @@ public class SoundService extends Service implements SensorEventListener, Locati
             lastFix=0; previousFix=0; previousSensor=0; hasBearing=false; hasRotation=false; gpsAccel=0;sensorAccel=0; acceleration=0; speed=0;
             demo=newDemo;
             if(!demo){
-                locations.requestLocationUpdates(LocationManager.GPS_PROVIDER,500,0,this,Looper.getMainLooper());
+                locations.requestLocationUpdates(LocationManager.GPS_PROVIDER,200,0,this,Looper.getMainLooper());
                 Sensor r=sensors.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
                 Sensor a=sensors.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
                 if(r!=null)sensors.registerListener(this,r,SensorManager.SENSOR_DELAY_GAME);
@@ -78,12 +80,12 @@ public class SoundService extends Service implements SensorEventListener, Locati
     }
     @Override public void onLocationChanged(Location l){
         long t=l.getElapsedRealtimeNanos()/1000000L;
-        if(!l.hasSpeed() || (l.hasAccuracy()&&l.getAccuracy()>35) || SystemClock.elapsedRealtime()-t>3000)return;
+        if(!l.hasSpeed() || (l.hasSpeedAccuracy() && l.getSpeedAccuracyMetersPerSecond()>2.5f) || (l.hasAccuracy()&&l.getAccuracy()>35) || SystemClock.elapsedRealtime()-t>3000)return;
         float raw=clamp(l.getSpeed(),0,90);
         if(previousFix!=0 && t>previousFix && t-previousFix<4000){
             float a=clamp((raw-previousSpeed)/((t-previousFix)/1000f),-8,8);
             gpsAccel=.6f*gpsAccel+.4f*a;
-            speed=.35f*speed+.65f*raw;
+            speed=.25f*speed+.75f*raw;
         }else{speed=raw;gpsAccel=0;}
         if(raw<.4f)speed=0;
         previousSpeed=raw;previousFix=t;lastFix=t;
@@ -116,25 +118,26 @@ public class SoundService extends Service implements SensorEventListener, Locati
                 .setBufferSizeInBytes(Math.max(min,2048)).setTransferMode(AudioTrack.MODE_STREAM).build();
             track=out;out.play();
             short[] pcm=new short[256];
-            double phase=0,freq=50,amp=0,simSpeed=0,simAccel=0,previousDemo=0;
+            EngineAudio engine=new EngineAudio(getAssets(),rate);
+            double simSpeed=0,simAccel=0,previousDemo=0, demoDip=0;
+            int lastDemoShift=demoShift;
+            boolean wasValid=false, wasDemo=demo;
             while(audioRunning){
                 boolean valid=demo||gpsFresh();
-                if(demo){double target=demoSpeed;previousDemo=simSpeed;simSpeed+=Math.max(-.04,Math.min(.04,(target-simSpeed)*.025));simAccel=.97*simAccel+.03*(simSpeed-previousDemo)*rate/pcm.length;speed=(float)simSpeed;}
-                else {simSpeed=valid?speed:0;simAccel=valid?acceleration:0;}
-                int mode=profile;
-                double rpm=850+Math.min(6250,simSpeed*110+Math.max(0,simAccel)*210);
-                double targetFreq=rpm/60*(mode==0?4:mode==1?3:5);
-                double load=Math.max(0,Math.min(1,simAccel/3.0));
-                double targetAmp=valid?volume*(.19+.32*Math.min(1,simSpeed/35)+.42*load):0;
-                for(int j=0;j<pcm.length;j++){
-                    freq+=.0006*(targetFreq-freq);amp+=.0007*(targetAmp-amp);
-                    phase+=2*Math.PI*freq/rate; if(phase>=2*Math.PI)phase-=2*Math.PI;
-                    double x;
-                    if(mode==0)x=.47*Math.sin(phase)+.24*Math.sin(phase*2)+.16*Math.sin(phase*3)+.09*Math.sin(phase*5);
-                    else if(mode==1)x=.42*Math.sin(phase)+.31*Math.sin(phase*2)+.15*Math.sin(phase*4)+.08*Math.sin(phase*6);
-                    else x=.67*Math.sin(phase)+.21*Math.sin(phase*2)+.08*Math.sin(phase*3);
-                    pcm[j]=(short)(Math.max(-1,Math.min(1,x*amp))*32767);
-                }
+                double dt=pcm.length/(double)rate;
+                if(wasDemo!=demo || (valid&&!wasValid))engine.reset();
+                wasDemo=demo;wasValid=valid;
+                if(demo){
+                    if(lastDemoShift!=demoShift){lastDemoShift=demoShift;demoDip=.48; }
+                    previousDemo=simSpeed;
+                    double target=demoSpeed;
+                    if(demoDip>0){demoDip-=dt;target=Math.max(0,simSpeed-1.1);}
+                    simSpeed+=Math.max(-3.5*dt,Math.min(4.0*dt,(target-simSpeed)*dt*2.6));
+                    simAccel=.83*simAccel+.17*(simSpeed-previousDemo)/dt;
+                    speed=(float)simSpeed;
+                }else{simSpeed=valid?speed:0;simAccel=valid?acceleration:0;lastDemoShift=demoShift;demoDip=0;}
+                engine.render(pcm,profile,simSpeed,simAccel,valid?volume:0,dt);
+                rpm=(int)engine.rpm();gear=engine.gear();shifting=engine.shifting();recorded=engine.hasRecording();
                 if(out.write(pcm,0,pcm.length)<0)break;
             }
         }catch(RuntimeException e){android.util.Log.e("TeslaSound","Audio failed",e);}

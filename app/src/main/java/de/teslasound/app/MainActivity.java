@@ -13,7 +13,7 @@ import android.widget.*;
 
 public class MainActivity extends Activity {
     private final Handler handler = new Handler();
-    private TextView status;
+    private TextView status, engineStatus;
     private boolean demoMode;
     private Spinner profile;
     private SeekBar volume, demoSpeed;
@@ -23,7 +23,8 @@ public class MainActivity extends Activity {
             else if (SoundService.demo) status.setText(String.format(java.util.Locale.GERMANY,"DEMO  |  %.0f km/h",SoundService.speed * 3.6f));
             else if (!SoundService.gpsFresh()) status.setText("Warte auf genaues GPS …");
             else status.setText(String.format(java.util.Locale.GERMANY,"%.0f km/h  |  %+.2f m/s²",SoundService.speed * 3.6f,SoundService.acceleration));
-            handler.postDelayed(this, 250);
+            engineStatus.setText(SoundService.running ? String.format(java.util.Locale.GERMANY,"%d U/min   •   Gang %d%s\n%s",SoundService.rpm,SoundService.gear,SoundService.shifting?"  •  SCHALTEN":"",SoundService.recorded?"Aufnahme + Motorsimulation":"Motorsimulation"):"Motor aus");
+            handler.postDelayed(this, 150);
         }
     };
     private TextView label(String s, int size) {
@@ -37,9 +38,10 @@ public class MainActivity extends Activity {
         root.addView(label("TESLASOUND",32));
         root.addView(label("Virtueller Motorsound • Bluetooth",16));
         status=label("Bereit",25); status.setGravity(Gravity.CENTER); status.setPadding(0,45,0,45); root.addView(status);
+        engineStatus=label("Motor aus",18); engineStatus.setGravity(Gravity.CENTER); root.addView(engineStatus);
         root.addView(label("Motorprofil",16));
         profile=new Spinner(this);
-        ArrayAdapter<String> adapter=new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"V8 • tief","Sport • V6","Future • elektrisch"});
+        ArrayAdapter<String> adapter=new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"Formel 1 • V8 (klassisch)","V8 • Muscle Car","Diesel • 4 Zylinder","Benziner • 4 Zylinder","Zweitakter • Trabant-Stil"});
         profile.setAdapter(adapter); profile.setSelection(SoundService.profile);
         profile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
             public void onItemSelected(AdapterView<?> p, android.view.View v,int i,long id){SoundService.profile=i;}
@@ -58,6 +60,8 @@ public class MainActivity extends Activity {
             public void onProgressChanged(SeekBar b,int p,boolean u){SoundService.demoSpeed=p/3.6f;}
             public void onStartTrackingTouch(SeekBar b){} public void onStopTrackingTouch(SeekBar b){}
         });
+        Button testShift=new Button(this); testShift.setText("DEMO: KURZER GASEINBRUCH");
+        root.addView(testShift); testShift.setOnClickListener(v->{if(SoundService.demo && SoundService.running)SoundService.demoShift++; else Toast.makeText(this,"Nur im Stand-Demo verfügbar",Toast.LENGTH_SHORT).show();});
         TextView note=label("Vor der Fahrt einstellen. Handy sicher befestigen. Tesla: Bluetooth als Medienquelle wählen. Bei fehlendem GPS bleibt der Fahr-Sound stumm. Nicht während der Fahrt bedienen.",14); note.setPadding(0,24,0,0); root.addView(note);
     }
     private void requestStart(){
