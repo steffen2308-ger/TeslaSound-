@@ -1,0 +1,25 @@
+name: Hupen laden
+# One-off helper: downloads generated horn variants and stores the cleanest one per vehicle.
+on:
+  push:
+    branches: ['asset-fetch-horns*']
+    paths: ['tools/horn_urls.txt', '.github/workflows/fetch-horns.yml']
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: which ffmpeg || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+      - run: pip install --quiet numpy
+      - run: python3 tools/prepare_horns.py tools/horn_urls.txt app/src/main/assets/horns | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p analysis && mv horn-preview.wav analysis/
+          git rm --quiet --cached tools/horn_urls.txt
+          git add app/src/main/assets/horns analysis/horn-preview.wav
+          git commit -m "Add selected horn samples"
+          git push
