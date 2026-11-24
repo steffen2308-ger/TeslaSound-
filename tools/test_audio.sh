@@ -10,7 +10,7 @@ cat > "$tmp/android/util/Log.java" <<'EOF'
 package android.util;
 public class Log { public static int w(String a,String b,Throwable t){return 0;} }
 EOF
-cp app/src/main/java/de/teslasound/app/{EngineAudio,Gearbox,TrabantAudio}.java "$tmp/de/teslasound/app/"
+cp app/src/main/java/de/teslasound/app/{EngineAudio,EngineSynth,Gearbox,TrabantAudio}.java "$tmp/de/teslasound/app/"
 cat > "$tmp/de/teslasound/app/Test.java" <<'EOF'
 package de.teslasound.app;
 public class Test {

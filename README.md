@@ -28,3 +28,6 @@ Dedicated real-time Trabant two-stroke synthesizer. Two combustion events per cr
 
 ## 0.5.5
 Trabant synthesizer: feedback delay line models the expansion chamber (~140 Hz pipe resonance), separate kernels per cylinder for an audible twin character, short filtered noise burst gated to each combustion event (no continuous noise), sharper blowdown transient. Level reduced at high RPM to stay below clipping.
+
+## 0.6.0
+New physical-style synthesizer for all 16 other vehicles (EngineSynth): every cylinder bank feeds its own exhaust pipe, so the firing order shapes the sound (crossplane V8 burble, even V10/V12 scream, boxer beat). Per-cylinder differences and lumpy idle, diesel knock, valvetrain ticks, intake roar under load, overrun pops after lifting off and on upshifts, turbo whine with blow-off, roots blower, cooling fan (Beetle), hybrid e-motor and straight-cut gear whine. Levels calibrated per vehicle. Imported recordings still take priority within their RPM range.

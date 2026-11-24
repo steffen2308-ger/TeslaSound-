@@ -48,8 +48,7 @@ final class EngineAudio {
     private final Gearbox gearbox=new Gearbox();
     private final List<List<Loop>> recordings=new ArrayList<>();
     private final List<Loop> trabiTables=new ArrayList<>();
-    private final float[][] pulse=new float[SPECS.length][];
-    private final float[] ring=new float[2048];
+    private final EngineSynth[] synths=new EngineSynth[SPECS.length];
     private final Random rand=new Random(13421);
     private int current=-1,cursor=0,fireIndex=0;
     private double cycle=0,amp=0,lowNoise=0,noiseHigh=0,dc=0,level=0,revFlutter=0,shiftSound=0,blowerPhase=0,blowerLoad=0,prevRpm=0;
@@ -68,23 +67,6 @@ final class EngineAudio {
         }trabiTables.sort(Comparator.comparingDouble(l->l.base));}catch(Exception ex){android.util.Log.w("TeslaSound","Trabant phase tables unavailable",ex);}
         for(int k=0;k<SPECS.length;k++){
             List<Loop> list=new ArrayList<>();recordings.add(list);
-            Spec p=SPECS[k];float[] ir=new float[k==4?1200:420];pulse[k]=ir;
-            for(int i=0;i<ir.length;i++){
-                double t=i/(double)rate,x=0;
-                for(int j=0;j<p.resonances.length;j++){
-                    double f=p.resonances[j],decay=65+j*65;
-                    x+=p.gains[j]*Math.sin(2*Math.PI*f*t)*Math.exp(-t*decay);
-                }
-                if(k==4){
-                    // Short exhaust blowdown, negative pressure return, and damped pipe/body resonances.
-                    double pop=1.65*(Math.exp(-t*440)-Math.exp(-t*3900))
-                        -.75*(Math.exp(-t*125)-Math.exp(-t*440));
-                    double ring1=.64*Math.sin(2*Math.PI*192*t)*Math.exp(-t*230);
-                    double ring2=.43*Math.sin(2*Math.PI*415*t)*Math.exp(-t*360);
-                    double ring3=.19*Math.sin(2*Math.PI*830*t)*Math.exp(-t*620);
-                    ir[i]=(float)((pop+ring1+ring2+ring3)*(1-Math.exp(-t*4200))*.64);
-                }else ir[i]=(float)(x*(1-Math.exp(-t*2600))*.56);
-            }
             try{
                 String[] names=assets.list("engines/"+k);
                 if(names!=null)for(String name:names)if(name.endsWith(".pcm")){
@@ -109,7 +91,7 @@ final class EngineAudio {
             list.sort(Comparator.comparingDouble(l->l.base));
         }
     }
-    void reset(){trabant.reset();gearbox.reset();current=-1;cycle=0;fireIndex=0;Arrays.fill(ring,0);shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
+    void reset(){trabant.reset();for(EngineSynth e:synths)if(e!=null)e.reset();gearbox.reset();current=-1;shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
     double rpm(){return gearbox.rpm;}
     int gear(){return gearbox.gear;}
     boolean shifting(){return gearbox.shiftLeft>0;}
@@ -117,7 +99,7 @@ final class EngineAudio {
     void render(short[] out,int mode,double speed,double acceleration,double volume,double dt){
         mode=Math.max(0,Math.min(SPECS.length-1,mode));
         Spec p=SPECS[mode];
-        if(current!=mode){trabant.reset();gearbox.reset();current=mode;cycle=0;fireIndex=0;Arrays.fill(ring,0);previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
+        if(current!=mode){trabant.reset();if(mode!=4){if(synths[mode]==null)synths[mode]=new EngineSynth(mode,SPECS[mode],rate);else synths[mode].reset();}gearbox.reset();current=mode;previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
         gearbox.update(p,speed,acceleration,dt);
         boolean shifting=shifting();
         if(shifting&&!previousShift)shiftSound=1;
@@ -139,6 +121,7 @@ final class EngineAudio {
             prevRpm=rpm;
             return;
         }
+        EngineSynth synth=synths[mode];
         List<Loop> layers=recordings.get(mode);
         Loop lo=null,hi=null;
         double mix=0;
@@ -148,95 +131,23 @@ final class EngineAudio {
             if(lo!=hi)mix=Math.max(0,Math.min(1,Math.log(rpm/lo.base)/Math.log(hi.base/lo.base)));
         }
         double wa=Math.sqrt(1-mix),wb=Math.sqrt(mix);
-        // Keep the original full recording, including its natural irregularity.
-        // Select one layer with hysteresis; only overlap briefly on an actual layer change.
-        if(mode==4&&!layers.isEmpty()){
-            Loop best=layers.get(0);
-            for(Loop candidate:layers)if(Math.abs(Math.log(rpm/candidate.base))<Math.abs(Math.log(rpm/best.base)))best=candidate;
-            if(trabiActive==null){trabiActive=best;trabiPrevious=null;trabiFade=1;}
-            else if(best!=trabiActive && trabiFade>=1 && Math.abs(Math.log(rpm/trabiActive.base))-Math.abs(Math.log(rpm/best.base))>.085){
-                trabiPrevious=trabiActive;trabiActive=best;trabiFade=0;
-            }
-        }
-        double norm=(rpm-p.idle)/(p.redline-p.idle);
         if(prevRpm<=0)prevRpm=rpm;
         double rpmStep=(rpm-prevRpm)/out.length;
         double runningRpm=prevRpm;
         prevRpm=rpm;
-        double recWeight=lo==null?0:(mode==4?1:.82);
+        // Imported recordings dominate within their RPM range; the synthesizer fills in beyond it.
+        double recWeight=lo==null?0:.82;
         if(lo!=null && hi!=null){double range=Math.max(lo.base/rpm,rpm/hi.base);recWeight*=Math.max(0,1-Math.max(0,range-1.5)*.75);}
         for(int i=0;i<out.length;i++){
-            // Small combustion variability and crank-speed flutter; 720-degree engine cycle.
-            double white=rand.nextDouble()*2-1;
-            revFlutter=.9995*revFlutter+.0005*white;
             runningRpm+=rpmStep;
-            double rateCycle=runningRpm/(120*rate);
-            if(mode==4){trabiCrank+=2*Math.PI*runningRpm/(60*rate);if(trabiCrank>2*Math.PI)trabiCrank-=2*Math.PI;rateCycle*=1+(.025+.09*(1-load))*Math.sin(trabiCrank);}
-            double old=cycle;
-            cycle+=rateCycle*(1+revFlutter*.16+(mode==4?.012:0)*Math.sin(2*Math.PI*old));
-            if(cycle>=1){cycle-=1;fireIndex=0;}
-            if(cycle<old || (fireIndex<p.angles.length && cycle>=p.angles[fireIndex])){
-                if(fireIndex<p.angles.length){
-                    double strength=p.strengths[fireIndex]*(.78+.44*rand.nextDouble())*(.52+.62*load);
-                    if(mode==4){
-                        trabiPulse++;
-                        // Two cylinders fire every crank revolution. At light load, intermittent weak combustion.
-                        double miss=Math.max(0,.30-load*.52);
-                        strength=p.strengths[fireIndex]*(.40+.95*load)*(.78+.44*rand.nextDouble());
-                        if(rand.nextDouble()<miss)strength*=.06;
-                        else if(load<.32 && trabiPulse%7==0)strength*=.43;
-                        if(shifting)strength*=.22;
-                    }
-                    if(mode==2)strength*=1.10;
-                    float[] h=pulse[mode];
-                    for(int j=0;j<h.length;j++)ring[(cursor+j)&2047]+=h[j]*strength;
-                    fireIndex++;
-                }
-            }
-            double combustion=ring[cursor];ring[cursor]=0;cursor=(cursor+1)&2047;
-            lowNoise+=.045*(white-lowNoise);noiseHigh+=.32*(white-noiseHigh);
-            // No continuous artificial white/pink noise on ANY profile.
-            double synth=combustion*.85;
-            if(mode==4){
-                // Two-stage low-pass: mechanical exhaust pulses, without synthetic broadband hiss.
-                trabiFilter+=.30*(combustion-trabiFilter);
-                trabiFilter2+=.24*(trabiFilter-trabiFilter2);
-                synth=(.78*trabiFilter2+.22*trabiFilter)*1.15;
-            }
+            double engine=synth.next(runningRpm,load,shifting);
             double samples=0;
-            if(mode==4&&trabiActive!=null){
-                // Do not replace the exhaust recording with a periodic averaged waveform.
-                // Cap stretching because the source clip contains no genuine full-throttle high RPM.
-                samples=trabiActive.next(runningRpm,1.55);
-                if(trabiPrevious!=null&&trabiFade<1){
-                    double oldSample=trabiPrevious.next(runningRpm,1.55);
-                    double f=.5-.5*Math.cos(Math.PI*trabiFade);
-                    samples=oldSample*(1-f)+samples*f;
-                    trabiFade=Math.min(1,trabiFade+1.0/(rate*.085));
-                    if(trabiFade>=1)trabiPrevious=null;
-                }
-            }else if(lo!=null){samples=lo.next(runningRpm)*wa;if(hi!=lo)samples+=hi.next(runningRpm)*wb;}
-            double x=mode==4&&trabiActive!=null?samples:(1-recWeight)*synth+recWeight*samples;
-            if(mode==10||mode==11||mode==12){
-                double wanted=shifting?0:load*Math.sqrt(Math.max(0,norm));
-                turbo+=(wanted-turbo)*(wanted>turbo?.00014:.00035);
-                turboPhase+=2*Math.PI*(900+turbo*3800)/rate;if(turboPhase>2*Math.PI)turboPhase-=2*Math.PI;
-                turboAir+=.18*(white-turboAir);
-                x+=turbo*turbo*.075*Math.sin(turboPhase);
-            }
-            if(mode==8){
-                // Roots-type blower: load-dependent narrow high-frequency whine, with sidebands.
-                blowerLoad+=.0014*((shifting?0:load)-blowerLoad);
-                blowerPhase+=2*Math.PI*(runningRpm/60*18.7)/rate;
-                if(blowerPhase>2*Math.PI)blowerPhase-=2*Math.PI;
-                x+=blowerLoad*blowerLoad*(.10+.18*norm)*(.78*Math.sin(blowerPhase)+.17*Math.sin(2*blowerPhase)+.05*Math.sin(3*blowerPhase));
-            }
-            // DC rejection and soft saturation, plus clutch/ignition cut and brief exhaust transient.
+            if(lo!=null){samples=lo.next(runningRpm)*wa;if(hi!=lo)samples+=hi.next(runningRpm)*wb;}
+            // Turbo, blower, fan etc. stay audible on top of imported recordings.
+            double x=(1-recWeight)*engine+recWeight*samples+synth.accessory();
             dc+=.0014*(x-dc);x-=dc;
             amp+=.0019*(targetAmp-amp);
-            double transientSound=0; // Gear changes use combustion/volume cut and RPM drop, not noise.
-            shiftSound*=.9994;
-            double y=(x*1.6*amp+transientSound*volume);
+            double y=x*1.6*amp;
             if(volume==0 && amp<.00001)y=0;
             y=y/(1+Math.abs(y)*.55);
             out[i]=(short)(Math.max(-.97,Math.min(.97,y))*32767);
