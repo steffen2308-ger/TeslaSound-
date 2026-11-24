@@ -70,12 +70,12 @@ final class EngineSynth {
         /*14 LFA V10   */ new Profile(ALT10, .45,.48,12000,1400,5740,.30,.30,.00,.00,.06,.90,.35,0,0,0,0,0,0,0),
         /*15 Käfer     */ new Profile(BOXER4,.50,.55,1500,2700,5400,.30,.80,.10,.00,.35,.15,.10,0,0,0,0,1,0,0),
         /*16 Revuelto  */ new Profile(ALT12, .45,.48,11200,1150,7600,.30,.25,.00,.00,.06,.80,.50,0,0,0,0,0,1,0),
-        /*17 Stadtbus  */ new Profile(new int[]{0,0,0,0,0,0},.45,.45,6000,500,2500,.50,.40,.00,.70,.12,.15,.00,1,3800,0,0,0,0,0),
+        /*17 Stadtbus  */ new Profile(new int[]{0,0,0,0,0,0},.45,.45,9600,1500,7500,.30,.40,.00,.70,.12,.15,.00,1,3800,0,0,0,0,0),
         /*18 Space Shuttle (RocketAudio, entry unused) */ new Profile(I4,.4,.4,3000,1000,2000,.5,.5,0,0,0,0,0,0,0,0,0,0,0,0),
     };
 
     // Exhaust flow noise per vehicle (tuned against reference recordings).
-    private static final double[] RASP={.30,.35,.20,.35,0,.35,.35,.30,.20,.35,.35,.35,.35,.80,.30,.80,.55,.25,0};
+    private static final double[] RASP={.30,.35,.20,.35,0,.35,.35,.30,.20,.35,.35,.35,.35,.80,.30,.80,.55,.80,0};
     static{for(int i=0;i<PROFILES.length;i++)PROFILES[i].rasp=RASP[i];}
     /** Pneumatic brake hiss when coming to a stop (buses). */
     private static final boolean[] AIR_BRAKE=new boolean[PROFILES.length];

@@ -14,6 +14,10 @@ public class SoundService extends Service implements SensorEventListener, Locati
     static volatile int profile=0, rpm=0, gear=1;
     static volatile boolean shifting=false, recorded=false;
     static volatile int demoShift=0;
+    /** Horn button state, set by the activity while the button is held. */
+    static volatile boolean horn=false;
+    /** Automatic acceleration run to top speed (demo mode only). */
+    static volatile boolean autoRun=false;
     private static volatile long lastFix=0;
     private volatile boolean audioRunning=false;
     private volatile AudioTrack track;
@@ -119,6 +123,8 @@ public class SoundService extends Service implements SensorEventListener, Locati
             track=out;if(!audioRunning)return;out.play();
             short[] pcm=new short[256];
             EngineAudio engine=new EngineAudio(getAssets(),rate,new java.io.File(getFilesDir(),"engines"));
+            Horn hornSound=new Horn(rate);
+            AutoRun run=null;int runProfile=-1;
             double simSpeed=0,simAccel=0,previousDemo=0, demoDip=0;
             int lastDemoShift=demoShift;
             boolean wasValid=false, wasDemo=demo;
@@ -127,7 +133,14 @@ public class SoundService extends Service implements SensorEventListener, Locati
                 double dt=pcm.length/(double)rate;
                 if(wasDemo!=demo || (valid&&!wasValid))engine.reset();
                 wasDemo=demo;wasValid=valid;
-                if(demo){
+                if(demo&&autoRun){
+                    if(run==null||runProfile!=profile){run=new AutoRun(profile);runProfile=profile;engine.setAutoShift(EngineAudio.RUN_SHIFT_RPM[profile]);}
+                    previousDemo=simSpeed;
+                    double a=run.acceleration(engine,simSpeed,dt);
+                    simSpeed+=a*dt;simAccel=a;speed=(float)simSpeed;
+                    if(run.done())autoRun=false;
+                }else if(demo){
+                    if(run!=null){run=null;runProfile=-1;engine.setAutoShift(0);}
                     if(lastDemoShift!=demoShift){lastDemoShift=demoShift;demoDip=.48; }
                     previousDemo=simSpeed;
                     double target=demoSpeed;
@@ -135,8 +148,10 @@ public class SoundService extends Service implements SensorEventListener, Locati
                     simSpeed+=Math.max(-3.5*dt,Math.min(4.0*dt,(target-simSpeed)*dt*2.6));
                     simAccel=.83*simAccel+.17*(simSpeed-previousDemo)/dt;
                     speed=(float)simSpeed;
-                }else{simSpeed=valid?speed:0;simAccel=valid?acceleration:0;lastDemoShift=demoShift;demoDip=0;}
+                }else{autoRun=false;if(run!=null){run=null;runProfile=-1;engine.setAutoShift(0);}simSpeed=valid?speed:0;simAccel=valid?acceleration:0;lastDemoShift=demoShift;demoDip=0;}
                 engine.render(pcm,profile,simSpeed,simAccel,valid?volume:0,dt);
+                // The horn works even without GPS, like a real one.
+                hornSound.mix(pcm,profile,horn,volume);
                 rpm=(int)engine.rpm();gear=engine.gear();shifting=engine.shifting();recorded=engine.hasRecording();
                 if(!audioRunning || out.write(pcm,0,pcm.length)<0)break;
             }
@@ -145,7 +160,7 @@ public class SoundService extends Service implements SensorEventListener, Locati
     }
     @Override public void onTaskRemoved(Intent rootIntent){stopSelf();super.onTaskRemoved(rootIntent);}
     @Override public void onDestroy(){
-        audioRunning=false;running=false;rpm=0;gear=1;shifting=false;recorded=false;
+        audioRunning=false;running=false;rpm=0;gear=1;shifting=false;recorded=false;autoRun=false;horn=false;
         if(locations!=null)locations.removeUpdates(this);
         if(sensors!=null)sensors.unregisterListener(this);
         if(routeReceiverRegistered)unregisterReceiver(noisy);

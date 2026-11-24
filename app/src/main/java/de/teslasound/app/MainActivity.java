@@ -65,11 +65,31 @@ public class MainActivity extends Activity {
         Button start=new Button(this); start.setText("FAHR-SOUND STARTEN"); controls.addView(start,new LinearLayout.LayoutParams(0,-2,2)); start.setOnClickListener(v->{demoMode=false; requestStart();});
         Button stop=new Button(this); stop.setText("STOPP");controls.addView(stop,new LinearLayout.LayoutParams(0,-2,1));stop.setOnClickListener(v->stopService(new Intent(this,SoundService.class)));
         root.addView(controls);
+        Button horn=new Button(this); horn.setText("HUPE (gedrückt halten)"); root.addView(horn);
+        horn.setOnTouchListener((v,e)->{
+            int a=e.getActionMasked();
+            if(a==android.view.MotionEvent.ACTION_DOWN){
+                if(!SoundService.running){Toast.makeText(this,"Erst Fahr-Sound oder Demo starten",Toast.LENGTH_SHORT).show();return true;}
+                SoundService.horn=true;v.setPressed(true);
+            }else if(a==android.view.MotionEvent.ACTION_UP||a==android.view.MotionEvent.ACTION_CANCEL){
+                SoundService.horn=false;v.setPressed(false);
+                if(a==android.view.MotionEvent.ACTION_UP)v.performClick();
+            }
+            return true;
+        });
         Button demo=new Button(this); demo.setText("DEMO IM STAND STARTEN"); root.addView(demo); demo.setOnClickListener(v->{demoMode=true; requestStart();});
         root.addView(label("Demo-Geschwindigkeit (0–160 km/h)",15)); demoSpeed=new SeekBar(this); demoSpeed.setMax(160); demoSpeed.setProgress((int)(SoundService.demoSpeed*3.6f)); root.addView(demoSpeed);
         demoSpeed.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
             public void onProgressChanged(SeekBar b,int p,boolean u){SoundService.demoSpeed=p/3.6f;}
             public void onStartTrackingTouch(SeekBar b){} public void onStopTrackingTouch(SeekBar b){}
+        });
+        Button autoRun=new Button(this); autoRun.setText("AUTO-BESCHLEUNIGUNG BIS VMAX"); root.addView(autoRun);
+        autoRun.setOnClickListener(v->{
+            if(SoundService.autoRun){SoundService.autoRun=false;Toast.makeText(this,"Beschleunigung abgebrochen",Toast.LENGTH_SHORT).show();return;}
+            if(SoundService.running&&!SoundService.demo){Toast.makeText(this,"Nur im Stand-Demo – erst STOPP drücken",Toast.LENGTH_LONG).show();return;}
+            SoundService.autoRun=true;
+            if(!SoundService.running){demoMode=true;requestStart();}
+            Toast.makeText(this,SoundService.profile==EngineAudio.SHUTTLE?"Countdown läuft – Start!":"Vollgas bis "+(int)EngineAudio.VMAX_KMH[SoundService.profile]+" km/h – erneut tippen zum Abbrechen",Toast.LENGTH_SHORT).show();
         });
         Button testShift=new Button(this); testShift.setText("DEMO: KURZER GASEINBRUCH");
         root.addView(testShift); testShift.setOnClickListener(v->{if(SoundService.demo && SoundService.running)SoundService.demoShift++; else Toast.makeText(this,"Nur im Stand-Demo verfügbar",Toast.LENGTH_SHORT).show();});
@@ -139,7 +159,7 @@ public class MainActivity extends Activity {
         } else if(req==2)startSound();
     }
     @Override protected void onResume(){super.onResume();handler.post(refresh);}
-    @Override protected void onPause(){handler.removeCallbacks(refresh);super.onPause();}
+    @Override protected void onPause(){SoundService.horn=false;handler.removeCallbacks(refresh);super.onPause();}
     @Override protected void onStop(){stopService(new Intent(this,SoundService.class));super.onStop();}
     @Override protected void onDestroy(){stopService(new Intent(this,SoundService.class));super.onDestroy();}
 }

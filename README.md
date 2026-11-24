@@ -34,3 +34,9 @@ New physical-style synthesizer for all 16 other vehicles (EngineSynth): every cy
 
 ## 0.6.1
 Engine tone tuned against real recordings from Wikimedia Commons: CI downloads them (they are not packaged), compares third-octave spectra with the synthesizer and searches muffler cutoffs, brightness, pulse sharpness and the new per-combustion exhaust flow noise. Mean tone deviation dropped from about 5.9 dB to 4.5 dB. Results and sources: analysis/report.md. Rerun by pushing to the reference-analysis branch.
+
+## 0.7.0
+- Two new vehicles: city bus (inline-six turbodiesel, automatic, air-brake release when stopping) and Space Shuttle (new RocketAudio: main engine start, booster ignition, turbulent roar with crackle, ground echoes; acceleration sets thrust, standing still for 4 s shuts down).
+- Gearbox: upshift point depends on acceleration (gentle driving around a quarter of the rev range, full throttle near the redline). A shift is recognised when acceleration that had been building suddenly drops away (like pressing the clutch), if the RPM is in a sensible range.
+- Horn button (hold): vehicle-typical horn, e.g. single thin horn for Trabant and Beetle, low loud pair for the bus, master alarm for the Space Shuttle. Works without GPS.
+- Automatic acceleration run to top speed in demo mode, with vehicle-typical 0-100 km/h time, shift RPM, power-to-weight ratio and top speed (approximate published figures).

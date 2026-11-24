@@ -101,8 +101,8 @@
    "file": "9_0.wav"
   },
   {
-   "title": "File:Lamborghini Aventador SVJ with Fi Exhaust - engine and exhaust sound (YouTube NCbywZoYDKE).opus",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/c/c5/Lamborghini_Aventador_SVJ_with_Fi_Exhaust_-_engine_and_exhaust_sound_%28YouTube_NCbywZoYDKE%29.opus?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "title": "File:Lamborghini Aventador SV - engine and exhaust sound (YouTube qll6WBfaXvM).opus",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Lamborghini_Aventador_SV_-_engine_and_exhaust_sound_%28YouTube_qll6WBfaXvM%29.opus?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
    "mime": "application/ogg",
    "file": "9_1.wav"
   }
@@ -131,8 +131,8 @@
    "file": "12_0.wav"
   },
   {
-   "title": "File:BMW M3 GTS - engine and exhaust sound (YouTube 5H5IY9 12uM).opus",
-   "url": "https://upload.wikimedia.org/wikipedia/commons/3/3b/BMW_M3_GTS_-_engine_and_exhaust_sound_%28YouTube_5H5IY9_12uM%29.opus?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "title": "File:BMW M3 GTR - engine and exhaust sound (YouTube r4qL2wTGcFM).opus",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/9/96/BMW_M3_GTR_-_engine_and_exhaust_sound_%28YouTube_r4qL2wTGcFM%29.opus?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
    "mime": "application/ogg",
    "file": "12_1.wav"
   }
@@ -165,6 +165,34 @@
    "url": "https://upload.wikimedia.org/wikipedia/commons/6/60/WWS_VolkswagenBeetle8211engine.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
    "mime": "application/ogg",
    "file": "15_1.wav"
+  }
+ ],
+ "17": [
+  {
+   "title": "File:WWS City Bus MAN SG 220 – engine.oga",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/WWS_City_Bus_MAN_SG_220_%E2%80%93_engine.oga?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "mime": "application/ogg",
+   "file": "17_0.wav"
+  },
+  {
+   "title": "File:City Bus MAN SG 220 – engine.ogv",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/19/City_Bus_MAN_SG_220_%E2%80%93_engine.ogv?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "mime": "application/ogg",
+   "file": "17_1.wav"
+  }
+ ],
+ "18": [
+  {
+   "title": "File:Space Shuttle Challenger Launch and Breakup.webm",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Space_Shuttle_Challenger_Launch_and_Breakup.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "mime": "video/webm",
+   "file": "18_0.wav"
+  },
+  {
+   "title": "File:En-Space shuttle Atlantis set for launch with Columbus module.ogg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/0/09/En-Space_shuttle_Atlantis_set_for_launch_with_Columbus_module.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "mime": "application/ogg",
+   "file": "18_1.wav"
   }
  ],
  "16": [

@@ -16,7 +16,7 @@ final class EngineAudio {
     }
     static final Spec[] SPECS={
         // Classic high-revving F1 V8, crossplane V8, four-cylinder diesel, petrol I4, two-stroke twin.
-        new Spec(5100,18000,430,.145,new double[]{675,505,400,327,277,237,205},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.93,1,.96,1,.93,1,.96},new double[]{260,630,1250,2500},new double[]{.18,.34,.36,.18},.10,.04),
+        new Spec(5100,18000,430,.145,new double[]{675,505,400,327,277,237,200},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.93,1,.96,1,.93,1,.96},new double[]{260,630,1250,2500},new double[]{.18,.34,.36,.18},.10,.04),
         new Spec(720,6500,200,.32,new double[]{335,221,155,118,91,73},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.43,.91,.55,.53,1,.48,.87},new double[]{78,151,310,610},new double[]{.63,.40,.21,.12},.10,.08),
         new Spec(790,4500,105,.38,new double[]{245,155,110,82,65,52},new double[]{0,.25,.50,.75},new double[]{1,.91,1,.91},new double[]{91,245,720,1840},new double[]{.53,.31,.23,.25},.15,.35),
         new Spec(820,6600,165,.34,new double[]{322,208,150,112,87,72},new double[]{0,.25,.50,.75},new double[]{1,.95,.98,.94},new double[]{125,270,590,1050},new double[]{.51,.34,.26,.13},.10,.10),
@@ -28,10 +28,10 @@ final class EngineAudio {
         new Spec(720,6500,215,.19,new double[]{355,238,176,139,111,90,74,60},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.47,.92,.64,.55,1,.50,.89},new double[]{72,147,335,670},new double[]{.72,.45,.27,.16},.13,.09),
         new Spec(950,8500,245,0.18,new double[]{390,260,191,150,121,99,83},new double[]{0.0/12,1.0/12,2.0/12,3.0/12,4.0/12,5.0/12,6.0/12,7.0/12,8.0/12,9.0/12,10.0/12,11.0/12},new double[]{1,0.92,0.98,0.89,1,0.95,0.98,0.92,1,0.9,0.98,0.95},new double[]{205,520,1100,2400},new double[]{0.28,0.45,0.48,0.27},0.12,0.06),
         new Spec(700,6800,190,0.21,new double[]{320,217,159,123,99,81,67,55},new double[]{0.0/8,1.0/8,2.0/8,3.0/8,4.0/8,5.0/8,6.0/8,7.0/8},new double[]{1,0.52,0.94,0.62,0.58,1,0.55,0.91},new double[]{72,148,300,610},new double[]{0.72,0.43,0.23,0.12},0.12,0.06),
-        new Spec(800,6700,180,0.16,new double[]{300,210,155,120,96,78,65},new double[]{0.0/16,1.0/16,2.0/16,3.0/16,4.0/16,5.0/16,6.0/16,7.0/16,8.0/16,9.0/16,10.0/16,11.0/16,12.0/16,13.0/16,14.0/16,15.0/16},new double[]{1,0.85,0.97,0.83,0.95,0.9,1,0.88,0.98,0.85,0.96,0.87,1,0.9,0.96,0.85},new double[]{65,155,360,780},new double[]{0.65,0.47,0.32,0.17},0.16,0.08),
+        new Spec(800,6700,180,0.16,new double[]{300,210,155,120,96,74,57},new double[]{0.0/16,1.0/16,2.0/16,3.0/16,4.0/16,5.0/16,6.0/16,7.0/16,8.0/16,9.0/16,10.0/16,11.0/16,12.0/16,13.0/16,14.0/16,15.0/16},new double[]{1,0.85,0.97,0.83,0.95,0.9,1,0.88,0.98,0.85,0.96,0.87,1,0.9,0.96,0.85},new double[]{65,155,360,780},new double[]{0.65,0.47,0.32,0.17},0.16,0.08),
         new Spec(750,7200,190,0.2,new double[]{355,240,177,137,108,88,72,60},new double[]{0.0/6,1.0/6,2.0/6,3.0/6,4.0/6,5.0/6},new double[]{1,0.95,0.99,0.91,0.98,0.93},new double[]{120,265,560,1260},new double[]{0.52,0.43,0.3,0.16},0.13,0.08),
-        new Spec(1100,7500,220,0.12,new double[]{385,275,211,166,133,110},new double[]{0.0/8,1.0/8,2.0/8,3.0/8,4.0/8,5.0/8,6.0/8,7.0/8},new double[]{1,0.45,0.91,0.62,0.53,1,0.48,0.89},new double[]{83,182,410,880},new double[]{0.7,0.52,0.34,0.18},0.16,0.11),
-        new Spec(950,9000,250,0.15,new double[]{390,270,205,162,133,109},new double[]{0.0/10,1.0/10,2.0/10,3.0/10,4.0/10,5.0/10,6.0/10,7.0/10,8.0/10,9.0/10},new double[]{1,0.95,0.98,0.93,0.99,0.94,1,0.95,0.97,0.94},new double[]{220,520,1150,2450},new double[]{0.3,0.44,0.52,0.32},0.08,0.04),
+        new Spec(1100,7500,220,0.12,new double[]{385,275,211,160,125,95},new double[]{0.0/8,1.0/8,2.0/8,3.0/8,4.0/8,5.0/8,6.0/8,7.0/8},new double[]{1,0.45,0.91,0.62,0.53,1,0.48,0.89},new double[]{83,182,410,880},new double[]{0.7,0.52,0.34,0.18},0.16,0.11),
+        new Spec(950,9000,250,0.15,new double[]{390,270,205,162,120,99},new double[]{0.0/10,1.0/10,2.0/10,3.0/10,4.0/10,5.0/10,6.0/10,7.0/10,8.0/10,9.0/10},new double[]{1,0.95,0.98,0.93,0.99,0.94,1,0.95,0.97,0.94},new double[]{220,520,1150,2450},new double[]{0.3,0.44,0.52,0.32},0.08,0.04),
         new Spec(850,4300,100,0.46,new double[]{250,148,99,70},new double[]{0.0/4,1.0/4,2.0/4,3.0/4},new double[]{1,0.77,0.95,0.74},new double[]{100,228,510,1090},new double[]{0.58,0.47,0.32,0.2},0.21,0.2),
         new Spec(850,9500,260,0.14,new double[]{410,292,219,169,135,111,94,80},new double[]{0.0/12,1.0/12,2.0/12,3.0/12,4.0/12,5.0/12,6.0/12,7.0/12,8.0/12,9.0/12,10.0/12,11.0/12},new double[]{1,0.97,0.99,0.94,1,0.96,0.98,0.95,1,0.97,0.99,0.95},new double[]{180,465,1050,2200},new double[]{0.29,0.43,0.51,0.31},0.1,0.05),
         // 17: city bus, 7.7 l inline-six turbodiesel with torque-converter automatic.
@@ -50,6 +50,20 @@ final class EngineAudio {
     private final TrabantAudio trabant;
     private final RocketAudio rocket;
     static final int BUS=17, SHUTTLE=18;
+    // Automatic acceleration run: approximate published figures per vehicle.
+    /** Top speed in km/h. */
+    static final double[] VMAX_KMH={320,210,215,200,107,296,250,340,320,355,280,420,290,285,325,120,350,80,1600};
+    /** Upshift RPM during the run (typical for a brisk full-throttle run with this car). */
+    static final double[] RUN_SHIFT_RPM={17500,5800,4000,5500,4000,8800,7000,8500,6200,8300,6500,6500,7000,7200,8800,4000,9300,1900,0};
+    /** Effective power-to-weight ratio in W/kg (rated power × ~0.85 drivetrain efficiency / kerb weight). */
+    static final double[] RUN_POWER={773,110,80,72,40,226,161,284,224,315,181,470,184,264,236,33,358,12.5,0};
+    /** Traction-limited launch acceleration in m/s², fitted so the run reproduces the 0-100 km/h time (see RUN_0_100). */
+    static final double[] RUN_ACCEL={11.24,5.03,3.84,4.06,2.8,9.01,7.08,9.37,8.01,10.57,8.51,12.33,7.61,8.69,7.84,1.71,11.77,1.3,3};
+    /** 0-100 km/h in seconds (approximate factory/press figures); 0 = not applicable. */
+    static final double[] RUN_0_100={2.6,6.5,8.5,8.5,21,3.2,4.6,3.1,3.7,2.8,3.6,2.4,3.9,3.4,3.7,23,2.5,0,0};
+    /** Seamless gearboxes (dual clutch, sequential, torque converter) keep pulling during a shift. */
+    static final boolean[] RUN_SEAMLESS={true,false,false,false,false,true,false,true,true,true,true,true,true,true,true,false,true,true,true};
+    void setAutoShift(double rpm){gearbox.autoShiftRpm=rpm;}
     private double turbo=0,turboPhase=0,turboAir=0,previousLoad=0;
     private final Gearbox gearbox=new Gearbox();
     private final List<List<Loop>> recordings=new ArrayList<>();
