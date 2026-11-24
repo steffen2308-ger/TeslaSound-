@@ -6,6 +6,9 @@ package de.teslasound.app;
  * - upshift early, at the RPM where this car is normally shifted (RUN_SHIFT_RPM),
  * - stay in gear or shift down only when the next/current gear can no longer pull,
  *   so the engine only revs high on the way to top speed.
+ * Driven briskly but not flat out: the driver aims for a car-typical acceleration of about half
+ * the car's maximum (at most 5 m/s²) and uses as much throttle as that needs, so weak cars
+ * (Käfer, Trabant, bus) are driven close to full throttle and strong cars gently.
  * Engine power scales with RPM (roughly constant torque below the power peak);
  * launch acceleration is capped by traction; drag grows with v² and balances the
  * available power exactly at top speed. With a manual gearbox the car stops pulling
@@ -28,6 +31,8 @@ final class AutoRun {
     }
     boolean done(){return done;}
     private double share(double rpm){return Math.max(.2,Math.min(1,rpm/(spec.redline*.92)));}
+    /** Car-typical brisk acceleration the driver aims for. */
+    private double desired(){return Math.min(5,Math.max(a0*.55,Math.min(a0,2.0)));}
     /** Net acceleration in a gear at speed v. */
     private double net(double v,int gear){
         double rpm=Math.max(spec.idle,v*spec.ratios[gear-1]);
@@ -57,7 +62,7 @@ final class AutoRun {
                 if(downRpm<=spec.redline*.92&&down>here+.1){want=gear-1;sinceDownshift=0;}
             }
             engine.forceGear(want);
-            a=Math.max(0,here);
+            a=Math.max(0,Math.min(desired(),here));
             if(engine.shifting())a*=EngineAudio.RUN_SEAMLESS[profile]?.6:.05;
         }else a=a0*Math.max(0,1-Math.pow(Math.min(1,speed/vmax),2.5));
         time+=dt;
