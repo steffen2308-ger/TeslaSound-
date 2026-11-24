@@ -97,7 +97,7 @@ final class EngineSynth {
     private final double[] knockK, valveK, crackK;
     private final Random random;
     private final long seed;
-    private final boolean airBrake, automatic;
+    private final boolean airBrake, automatic, seamless;
     private double speed=0, movedFor=0, air=0, airLow=0, airBand=0, airHp=0;
     private int cursor=0, firing=0;
     private double phase=1, interval=1, mixture=1, gain=1;
@@ -116,7 +116,7 @@ final class EngineSynth {
         int maxBank=0;for(int b:pr.banks)maxBank=Math.max(maxBank,b);
         nb=maxBank+1;
         seed=7919L*(mode+1);random=new Random(seed);
-        airBrake=AIR_BRAKE[mode];automatic=AUTOMATIC[mode];
+        airBrake=AIR_BRAKE[mode];automatic=AUTOMATIC[mode];seamless=EngineAudio.RUN_SEAMLESS[mode];
         kernels=new double[nb][3][];rings=new double[nb][RING];pipes=new double[nb][];
         pipeCursor=new int[nb];bankDelay=new int[nb];pipeDamp=new double[nb];raspEnv=new double[nb];raspLp=new double[nb];
         double pipeHz=spec.resonances[0];
@@ -241,7 +241,7 @@ final class EngineSynth {
             double force=cylGain[k]*(.35+.65*load)*mixture;
             // Cam overlap at idle: some cylinders burn weakly (lumpy idle).
             if(pr.lope>0&&(k%4==1||k%4==2))force*=1-pr.lope*.45*idleness*(.5+random.nextDouble());
-            if(shifting)force*=automatic?.75:.18;
+            if(shifting)force*=automatic?.75:seamless?.45:.18;
             if(lifted)force*=.55;
             double color=clamp(load*.65+norm*.35,0,1)*2;
             int a=Math.min(1,(int)color);double b=color-a;

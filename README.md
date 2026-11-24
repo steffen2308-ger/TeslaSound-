@@ -54,3 +54,6 @@ Clutch/converter slip now only acts while pulling away (engine held at a launch 
 ## 0.7.4
 - Gearing checked for all vehicles and corrected with published data: Lexus LFA (official max speed per gear 83/123/167/218/277 km/h), Porsche GT3 RS (Porsche ratios 3.75/2.381/1.7/1.344/1.114/0.957/0.844, final 4.188), Ferrari F12 (3.08/2.19/1.63/1.29/1.03/0.84/0.69, final 4.38, limiter 8700), Dodge Hellcat (8HP90, axle 2.62, limiter 6200), Lamborghini Veneno/Aventador (ISR ratios, overall reduction so that 350 km/h is reached in 7th at the power peak; previously 7th would have reached 486 km/h).
 - Automatic run now accelerates briskly but not flat out: the driver aims for about half of the car's maximum acceleration (at most 5 m/s²), weak cars are therefore driven near full throttle, strong cars gently. Trabant tuned to its real 0-100 km/h of about 40 s.
+
+## 0.7.5
+Shift gaps: Formula 1 shifts in 50 ms (was 145 ms) and dual-clutch/sequential gearboxes (GT3 RS, F12, Veneno, Chiron, AMG GT3, Revuelto) in 60-100 ms with only a partial ignition cut, so drive is barely interrupted. Manual gearboxes keep the real clutch pause. RPM follows the new gear as fast as the gearbox shifts.

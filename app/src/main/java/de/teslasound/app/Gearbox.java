@@ -71,7 +71,8 @@ final class Gearbox {
             double progress=1-shiftLeft/duration;
             target=fromRpm+(target-fromRpm)*clamp(progress*2.2,0,1);
         }
-        rpm+=(target-rpm)*Math.min(1,dt*(shiftLeft>0?17:8));
+        // During a shift RPM follows the new gear as fast as the gearbox changes.
+        rpm+=(target-rpm)*Math.min(1,dt*(shiftLeft>0?Math.max(17,3/duration):8));
     }
     private void shift(EngineAudio.Spec p,int next){fromRpm=rpm;gear=next;duration=p.shift;shiftLeft=duration;lastShift=clock;}
 }
