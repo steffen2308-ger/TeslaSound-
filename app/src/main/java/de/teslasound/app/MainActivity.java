@@ -140,4 +140,6 @@ public class MainActivity extends Activity {
     }
     @Override protected void onResume(){super.onResume();handler.post(refresh);}
     @Override protected void onPause(){handler.removeCallbacks(refresh);super.onPause();}
+    @Override protected void onStop(){stopService(new Intent(this,SoundService.class));super.onStop();}
+    @Override protected void onDestroy(){stopService(new Intent(this,SoundService.class));super.onDestroy();}
 }

@@ -116,7 +116,7 @@ public class SoundService extends Service implements SensorEventListener, Locati
             out=new AudioTrack.Builder().setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
                 .setAudioFormat(new AudioFormat.Builder().setSampleRate(rate).setEncoding(AudioFormat.ENCODING_PCM_16BIT).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
                 .setBufferSizeInBytes(Math.max(min,2048)).setTransferMode(AudioTrack.MODE_STREAM).build();
-            track=out;out.play();
+            track=out;if(!audioRunning)return;out.play();
             short[] pcm=new short[256];
             EngineAudio engine=new EngineAudio(getAssets(),rate,new java.io.File(getFilesDir(),"engines"));
             double simSpeed=0,simAccel=0,previousDemo=0, demoDip=0;
@@ -138,13 +138,14 @@ public class SoundService extends Service implements SensorEventListener, Locati
                 }else{simSpeed=valid?speed:0;simAccel=valid?acceleration:0;lastDemoShift=demoShift;demoDip=0;}
                 engine.render(pcm,profile,simSpeed,simAccel,valid?volume:0,dt);
                 rpm=(int)engine.rpm();gear=engine.gear();shifting=engine.shifting();recorded=engine.hasRecording();
-                if(out.write(pcm,0,pcm.length)<0)break;
+                if(!audioRunning || out.write(pcm,0,pcm.length)<0)break;
             }
         }catch(RuntimeException e){android.util.Log.e("TeslaSound","Audio failed",e);}
         finally{if(out!=null){try{out.stop();}catch(RuntimeException ignored){}out.release();}track=null;if(audioRunning)stopSelf();}
     }
+    @Override public void onTaskRemoved(Intent rootIntent){stopSelf();super.onTaskRemoved(rootIntent);}
     @Override public void onDestroy(){
-        audioRunning=false;running=false;
+        audioRunning=false;running=false;rpm=0;gear=1;shifting=false;recorded=false;
         if(locations!=null)locations.removeUpdates(this);
         if(sensors!=null)sensors.unregisterListener(this);
         if(routeReceiverRegistered)unregisterReceiver(noisy);

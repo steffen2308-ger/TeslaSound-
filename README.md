@@ -16,3 +16,6 @@ Alle Bedienelemente stehen oberhalb der Fahrzeuggalerie. Die 17 fotorealistisch 
 
 ## 0.5.1
 Trabant-specific pulse synthesis, no continuous synthetic broadband noise on any profile. Optional licensed Trabant sample acquisition and JVM audio smoke test; no device listening test.
+
+## 0.5.2
+Stop audio when activity goes into background or task is removed. Private phase-aligned Trabant samples may be packaged separately; public repository contains no unlicensed source audio.
