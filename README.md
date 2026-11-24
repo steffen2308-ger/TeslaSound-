@@ -57,3 +57,8 @@ Clutch/converter slip now only acts while pulling away (engine held at a launch 
 
 ## 0.7.5
 Shift gaps: Formula 1 shifts in 50 ms (was 145 ms) and dual-clutch/sequential gearboxes (GT3 RS, F12, Veneno, Chiron, AMG GT3, Revuelto) in 60-100 ms with only a partial ignition cut, so drive is barely interrupted. Manual gearboxes keep the real clutch pause. RPM follows the new gear as fast as the gearbox shifts.
+
+## 0.7.6
+- The engine never goes silent while shifting: off throttle with falling revs it gets quieter (manual about -6 to -10 dB, dual-clutch/automatic about -3 to -5 dB) but keeps running. Previously the level dropped to 0-5 % for up to half a second.
+- Shift times: manual 0.25-0.42 s (Trabant column shift slowest), automatics 0.15 s, bus 0.4 s, dual-clutch/sequential 0.05-0.10 s.
+- Exhaust pipe resonance weakened: it made the engine level jump by up to 4x at certain RPMs, which sounded like holes after a shift.

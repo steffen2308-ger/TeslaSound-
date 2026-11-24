@@ -11,7 +11,7 @@ package de.teslasound.app;
 final class Gearbox {
     int gear=1;
     double rpm, load, shiftLeft, clock, lastShift=-10, smoothSpeed;
-    double accFast, accSlow, pullTime;
+    double accFast, accSlow, pullTime, shiftLoad;
     double duration=.3, fromRpm;
     /** When above zero (automatic acceleration run), the gearbox selects exactly this gear. */
     int forcedGear=0;
@@ -35,7 +35,9 @@ final class Gearbox {
         // How long the driver has been pulling; fades out slowly so a sudden drop can still be seen.
         pullTime=accFast>.5?pullTime+dt:Math.max(0,pullTime-1.5*dt);
         double targetLoad=clamp(.24+accel*.24+(smoothSpeed>3?.12:0),.06,1);
-        load+=(targetLoad-load)*Math.min(1,dt*(targetLoad>load?7:11));
+        // Load follows the pedal quickly; while the clutch is in it only drops part of the way.
+        if(shiftLeft>0)targetLoad=Math.max(targetLoad,shiftLoad*.75);
+        load+=(targetLoad-load)*Math.min(1,dt*(targetLoad>load?14:11));
 
         if(shiftLeft>0)shiftLeft=Math.max(0,shiftLeft-dt);
         boolean ready=clock-lastShift>.9 && shiftLeft==0;
@@ -74,5 +76,5 @@ final class Gearbox {
         // During a shift RPM follows the new gear as fast as the gearbox changes.
         rpm+=(target-rpm)*Math.min(1,dt*(shiftLeft>0?Math.max(17,3/duration):8));
     }
-    private void shift(EngineAudio.Spec p,int next){fromRpm=rpm;gear=next;duration=p.shift;shiftLeft=duration;lastShift=clock;}
+    private void shift(EngineAudio.Spec p,int next){fromRpm=rpm;shiftLoad=load;gear=next;duration=p.shift;shiftLeft=duration;lastShift=clock;}
 }

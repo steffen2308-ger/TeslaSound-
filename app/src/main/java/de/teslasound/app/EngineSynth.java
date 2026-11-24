@@ -149,7 +149,7 @@ final class EngineSynth {
             double body=0;
             for(int j=0;j<spec.resonances.length;j++){
                 double w=j<2?1:(.45+.55*load)*(.35+pr.bright);
-                body+=spec.gains[j]*w*Math.sin(2*Math.PI*spec.resonances[j]*fScale*t)*Math.exp(-t*(70+j*95));
+                body+=spec.gains[j]*w*Math.sin(2*Math.PI*spec.resonances[j]*fScale*t)*Math.exp(-t*(160+j*120));
             }
             double fade=i>n-rate*.005?(n-i)/(rate*.005):1;
             h[i]=(.8*blow+rise*body)*fade;
@@ -241,7 +241,8 @@ final class EngineSynth {
             double force=cylGain[k]*(.35+.65*load)*mixture;
             // Cam overlap at idle: some cylinders burn weakly (lumpy idle).
             if(pr.lope>0&&(k%4==1||k%4==2))force*=1-pr.lope*.45*idleness*(.5+random.nextDouble());
-            if(shifting)force*=automatic?.75:seamless?.45:.18;
+            // Off throttle during the shift: weak coasting combustion, not silence.
+            if(shifting)force*=automatic?.85:seamless?.75:.75;
             if(lifted)force*=.55;
             double color=clamp(load*.65+norm*.35,0,1)*2;
             int a=Math.min(1,(int)color);double b=color-a;
@@ -280,9 +281,11 @@ final class EngineSynth {
             double[] pipe=pipes[b];
             double out=pipe[pipeCursor[b]];
             pipeDamp[b]+=(.30+.15*load)*(out-pipeDamp[b]);
-            pipe[pipeCursor[b]]=pressure+pr.pipeFb*(.85*pipeDamp[b]+.15*out);
+            pipe[pipeCursor[b]]=pressure+.25*pr.pipeFb*(.85*pipeDamp[b]+.15*out);
             if(++pipeCursor[b]>=pipe.length)pipeCursor[b]=0;
-            exhaust+=pressure+pr.pipeMix*out;
+            exhaust+=pressure+.2*pr.pipeMix*out;
+            // Pipe reflections only colour the sound: stronger values made the level jump by up to 4x
+            // whenever a firing harmonic hit the pipe resonance.
         }
         exhaust/=Math.sqrt(nb);
         // Muffler: two-pole low-pass, opening up with load and RPM (sport valves).

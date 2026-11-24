@@ -92,7 +92,7 @@ final class TrabantAudio {
             if(miss)consecutiveMiss++;else consecutiveMiss=0;
             double force=(.58+.59*load)*(.88+.24*random.nextDouble());
             force*=miss?(.07+.16*random.nextDouble()):(.86+.17*mixture);
-            if(shifting)force*=.30+.45*shiftFraction;
+            if(shifting)force*=.75+.25*shiftFraction;
             double color=clamp(load*.68+speedFactor*.32,0,1)*2;
             int a=Math.min(1,(int)color);
             double b=color-a;
