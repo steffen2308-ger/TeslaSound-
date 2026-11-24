@@ -3,16 +3,27 @@ Public preview audio only, no authenticated download or third-party tracking.
 The app has a procedural fallback when previews cannot be retrieved."""
 import html, re, urllib.request, concurrent.futures, subprocess, tempfile, pathlib, json, math
 import numpy as np
+import urllib.parse
 SOURCES=[
  (0,181187,'Ears68','F-1raceCar-IdleAndRaceStartDemo',[6700,9000,12000,15500],4),
  (1,651534,'overmedium','v8-engine-rev',[750,1600,2800,4200],4),
  (2,815853,'Mihacappy','3008-start-idle-rev-shutoff',[800,1500,2200,3000],2),
  (3,269771,'seth-m','car-idle',[850],2),
  (4,412818,'blukotek','two-stroke-trabant-engine-02',[900,1700,2600,3500],2)]
+DIRECT={
+  5:"https://upload.wikimedia.org/wikipedia/commons/1/10/Porsche_911_GT3_RS_-_engine_and_exhaust_sound_%28YouTube_1t2wz1iLHJ4%29.opus",
+  6:"https://upload.wikimedia.org/wikipedia/commons/b/be/Ford_Mustang_GT_%28S550%29_-_engine_and_exhaust_sound_%28YouTube_2ceiDjGgpI8%29.opus",
+  7:"https://upload.wikimedia.org/wikipedia/commons/a/ab/Ferrari_F12_-_engine_and_exhaust_sound_%28YouTube_JNvonF5LGYQ%29.opus",
+  8:"https://upload.wikimedia.org/wikipedia/commons/5/5c/Launching_sound_Challenger.ogg"
+}
+SOURCES += [(5,5,'','',[1000,2000,3500,5000,7000,8500],3),
+ (6,6,'','',[750,1500,2500,4000,5500,7000],4),
+ (7,7,'','',[1000,1800,3200,4800,6500,8500],6),
+ (8,8,'','',[750,1300,2200,3500,5000,6200],4)]
 RATE=44100
 DEST=pathlib.Path('app/src/main/assets/engines')
 def fetch(url):
-    r=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (compatible; TeslaSound sample preparation)'})
+    r=urllib.request.Request(url,headers={'User-Agent':'TeslaSound/0.3 (https://github.com/steffen2308-ger/TeslaSound-; engine audio sample preparation)'})
     with urllib.request.urlopen(r,timeout=12) as f:return f.read(12000000)
 def urls(sid,user,slug):
     for page in [f'https://freesound.org/people/{user}/sounds/{sid}/',f'https://freesound.org/embed/sound/iframe/{sid}/simple/medium/',f'https://soundspool.com/sounds/{slug}']:
@@ -26,7 +37,7 @@ def urls(sid,user,slug):
         except Exception as ex: print('Preview page unavailable',sid,str(ex),flush=True)
 def prep(source):
     k,sid,user,slug,targets,fires=source
-    for url in urls(sid,user,slug):
+    for url in ([DIRECT[k]] if k in DIRECT else urls(sid,user,slug)):
         try:
             with tempfile.TemporaryDirectory() as d:
                 p=pathlib.Path(d)/'source';p.write_bytes(fetch(url))
@@ -39,7 +50,7 @@ def prep(source):
     # Search stationary windows; prefer coherent firing frequencies and minimal drift.
     n=22050; window=np.hanning(n); bins=np.fft.rfftfreq(n,1/RATE)
     candidates=[]
-    for start in range(0,len(x)-n,RATE//8):
+    for start in range(0,len(x)-n,RATE//4):
         y=x[start:start+n].copy();y-=y.mean()
         rms=np.sqrt(np.mean(y*y))
         if rms<.006:continue
@@ -78,7 +89,7 @@ def prep(source):
     return {'profile':k,'id':sid,'status':'recorded' if chosen else 'no stable loops','rpm':[round(r) for r in chosen]}
 if __name__=='__main__':
     DEST.mkdir(parents=True,exist_ok=True)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
         results=list(pool.map(prep,SOURCES))
     (DEST/'sample-report.json').write_text(json.dumps(results,indent=2))
     print(json.dumps(results,indent=2),flush=True)

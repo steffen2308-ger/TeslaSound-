@@ -20,7 +20,12 @@ final class EngineAudio {
         new Spec(720,6500,200,.32,new double[]{335,221,155,118,91,73},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.43,.91,.55,.53,1,.48,.87},new double[]{78,151,310,610},new double[]{.63,.40,.21,.12},.10,.08),
         new Spec(790,4500,105,.38,new double[]{245,155,110,82,65,52},new double[]{0,.25,.50,.75},new double[]{1,.91,1,.91},new double[]{91,245,720,1840},new double[]{.53,.31,.23,.25},.15,.35),
         new Spec(820,6600,165,.34,new double[]{322,208,150,112,87,72},new double[]{0,.25,.50,.75},new double[]{1,.95,.98,.94},new double[]{125,270,590,1050},new double[]{.51,.34,.26,.13},.10,.10),
-        new Spec(850,4700,130,.48,new double[]{305,183,125,90},new double[]{0,.25,.50,.75},new double[]{1,.83,1,.83},new double[]{168,375,825,1470},new double[]{.46,.41,.28,.19},.19,.18)
+        new Spec(850,4700,130,.48,new double[]{305,183,125,90},new double[]{0,.25,.50,.75},new double[]{1,.83,1,.83},new double[]{168,375,825,1470},new double[]{.46,.41,.28,.19},.19,.18),
+        // 5: GT3 flat six, 6: modern muscle V8, 7: Ferrari V12, 8: supercharged Hellcat
+        new Spec(900,9000,240,.15,new double[]{355,245,182,143,115,94,79},new double[]{0,1.0/6,2.0/6,3.0/6,4.0/6,5.0/6},new double[]{1,.86,.96,.89,.99,.88},new double[]{145,315,720,1520},new double[]{.43,.49,.34,.23},.12,.08),
+        new Spec(650,7400,210,.27,new double[]{365,248,179,132,102,79},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.35,.93,.58,.47,1,.43,.88},new double[]{69,135,268,540},new double[]{.78,.49,.30,.14},.13,.08),
+        new Spec(850,8900,260,.13,new double[]{378,259,193,151,120,99,82},new double[]{0,1.0/12,2.0/12,3.0/12,4.0/12,5.0/12,6.0/12,7.0/12,8.0/12,9.0/12,10.0/12,11.0/12},new double[]{1,.94,.99,.97,.96,1,.95,.99,.96,1,.97,.95},new double[]{175,440,970,1920},new double[]{.26,.43,.47,.29},.10,.04),
+        new Spec(720,6500,215,.19,new double[]{355,238,176,139,111,90,74,60},new double[]{0,.125,.25,.375,.5,.625,.75,.875},new double[]{1,.47,.92,.64,.55,1,.50,.89},new double[]{72,147,335,670},new double[]{.72,.45,.27,.16},.13,.09)
     };
     private static final class Loop {
         final double base;final float[] data;double pos;
@@ -34,7 +39,7 @@ final class EngineAudio {
     private final float[] ring=new float[2048];
     private final Random rand=new Random(13421);
     private int current=-1,cursor=0,fireIndex=0;
-    private double cycle=0,amp=0,lowNoise=0,noiseHigh=0,dc=0,level=0,revFlutter=0,shiftSound=0;
+    private double cycle=0,amp=0,lowNoise=0,noiseHigh=0,dc=0,level=0,revFlutter=0,shiftSound=0,blowerPhase=0,blowerLoad=0,prevRpm=0;
     private boolean previousShift=false;
     EngineAudio(AssetManager assets,int rate){
         this.rate=rate;
@@ -63,7 +68,7 @@ final class EngineAudio {
             }catch(Exception e){android.util.Log.w("TeslaSound","Recording unavailable for "+k,e);}
         }
     }
-    void reset(){gearbox.reset();current=-1;cycle=0;fireIndex=0;Arrays.fill(ring,0);shiftSound=0;previousShift=false;}
+    void reset(){gearbox.reset();current=-1;cycle=0;fireIndex=0;Arrays.fill(ring,0);shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;}
     double rpm(){return gearbox.rpm;}
     int gear(){return gearbox.gear;}
     boolean shifting(){return gearbox.shiftLeft>0;}
@@ -71,7 +76,7 @@ final class EngineAudio {
     void render(short[] out,int mode,double speed,double acceleration,double volume,double dt){
         mode=Math.max(0,Math.min(SPECS.length-1,mode));
         Spec p=SPECS[mode];
-        if(current!=mode){gearbox.reset();current=mode;cycle=0;fireIndex=0;Arrays.fill(ring,0);previousShift=false;shiftSound=0;amp=0;}
+        if(current!=mode){gearbox.reset();current=mode;cycle=0;fireIndex=0;Arrays.fill(ring,0);previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;}
         gearbox.update(p,speed,acceleration,dt);
         boolean shifting=shifting();
         if(shifting&&!previousShift)shiftSound=1;
@@ -89,11 +94,18 @@ final class EngineAudio {
         }
         double wa=Math.sqrt(1-mix),wb=Math.sqrt(mix);
         double norm=(rpm-p.idle)/(p.redline-p.idle);
-        double rateCycle=rpm/(120*rate);
+        if(prevRpm<=0)prevRpm=rpm;
+        double rpmStep=(rpm-prevRpm)/out.length;
+        double runningRpm=prevRpm;
+        prevRpm=rpm;
+        double recWeight=lo==null?0:.82;
+        if(lo!=null && hi!=null){double range=Math.max(lo.base/rpm,rpm/hi.base);recWeight*=Math.max(0,1-Math.max(0,range-1.5)*.75);}
         for(int i=0;i<out.length;i++){
             // Small combustion variability and crank-speed flutter; 720-degree engine cycle.
             double white=rand.nextDouble()*2-1;
             revFlutter=.9995*revFlutter+.0005*white;
+            runningRpm+=rpmStep;
+            double rateCycle=runningRpm/(120*rate);
             double old=cycle;
             cycle+=rateCycle*(1+revFlutter*.16+(mode==4?.012:0)*Math.sin(2*Math.PI*old));
             if(cycle>=1){cycle-=1;fireIndex=0;}
@@ -113,11 +125,18 @@ final class EngineAudio {
             double synth=combustion*.85+texture*(.45+norm*.55);
             double samples=0;
             if(lo!=null){samples=lo.next(rpm)*wa;if(hi!=lo)samples+=hi.next(rpm)*wb;}
-            double x=lo==null?synth:(.76*samples+.24*synth);
+            double x=(1-recWeight)*synth+recWeight*samples;
+            if(mode==8){
+                // Roots-type blower: load-dependent narrow high-frequency whine, with sidebands.
+                blowerLoad+=.0014*((shifting?0:load)-blowerLoad);
+                blowerPhase+=2*Math.PI*(runningRpm/60*18.7)/rate;
+                if(blowerPhase>2*Math.PI)blowerPhase-=2*Math.PI;
+                x+=blowerLoad*blowerLoad*(.10+.18*norm)*(.78*Math.sin(blowerPhase)+.17*Math.sin(2*blowerPhase)+.05*Math.sin(3*blowerPhase));
+            }
             // DC rejection and soft saturation, plus clutch/ignition cut and brief exhaust transient.
             dc+=.0014*(x-dc);x-=dc;
             amp+=.0019*(targetAmp-amp);
-            double transientSound=shiftSound*(noiseHigh*.10+lowNoise*.23)*(mode==0||mode==1?.9:.4);
+            double transientSound=shiftSound*(noiseHigh*.10+lowNoise*.23)*(mode==0||mode==1||mode>=5?.9:.4);
             shiftSound*=.9994;
             double y=(x*1.6*amp+transientSound*volume);
             y=y/(1+Math.abs(y)*.55);

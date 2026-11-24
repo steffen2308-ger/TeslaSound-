@@ -1,3 +1,12 @@
+# Real audio source credits
+The engine recordings are modified into RPM-tagged mono loops (excerpting, resampling, crossfade, normalizing). The following Wikimedia Commons files are offered under the licenses indicated on their source pages. The adapted Hellcat samples are licensed CC BY-SA 4.0; other adapted recordings retain their respective CC BY 3.0 license. These licenses apply to the recorded audio assets, not independent app code. Some YouTube-derived Commons files have pending license review.
+
+- Porsche 911 GT3 RS, Supercars67, https://commons.wikimedia.org/wiki/File:Porsche_911_GT3_RS_-_engine_and_exhaust_sound_(YouTube_1t2wz1iLHJ4).opus — CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
+- Ford Mustang GT, Cestni dirkač, https://commons.wikimedia.org/wiki/File:Ford_Mustang_GT_(S550)_-_engine_and_exhaust_sound_(YouTube_2ceiDjGgpI8).opus — CC BY 3.0
+- Ferrari F12, Supercars1989, https://commons.wikimedia.org/wiki/File:Ferrari_F12_-_engine_and_exhaust_sound_(YouTube_JNvonF5LGYQ).opus — CC BY 3.0
+- Dodge Challenger SRT Hellcat, Axepas12, https://commons.wikimedia.org/wiki/File:Launching_sound_Challenger.ogg — CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
+
+Previous optional CC0 source candidates (downloads may be unavailable):
 # Audio credits (CC0)
 The build attempts to retrieve publicly playable previews of the following real recordings, process short steady-state loops and mix them with original procedural combustion audio. Previews may be unavailable; the UI reports whether a recording is present for the selected engine.
 

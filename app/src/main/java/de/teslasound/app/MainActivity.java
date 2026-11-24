@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
         engineStatus=label("Motor aus",18); engineStatus.setGravity(Gravity.CENTER); root.addView(engineStatus);
         root.addView(label("Motorprofil",16));
         profile=new Spinner(this);
-        ArrayAdapter<String> adapter=new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"Formel 1 • V8 (klassisch)","V8 • Muscle Car","Diesel • 4 Zylinder","Benziner • 4 Zylinder","Zweitakter • Trabant-Stil"});
+        ArrayAdapter<String> adapter=new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"Formel 1 • V8 (klassisch)","V8 • klassisch","Diesel • 4 Zylinder","Benziner • 4 Zylinder","Zweitakter • Trabant-Stil","Porsche 911 GT3 / GT3 RS","V8 Muscle • Mustang GT-Stil","Ferrari F12 • V12","Dodge Challenger SRT Hellcat"});
         profile.setAdapter(adapter); profile.setSelection(SoundService.profile);
         profile.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
             public void onItemSelected(AdapterView<?> p, android.view.View v,int i,long id){SoundService.profile=i;}
@@ -62,6 +62,12 @@ public class MainActivity extends Activity {
         });
         Button testShift=new Button(this); testShift.setText("DEMO: KURZER GASEINBRUCH");
         root.addView(testShift); testShift.setOnClickListener(v->{if(SoundService.demo && SoundService.running)SoundService.demoShift++; else Toast.makeText(this,"Nur im Stand-Demo verfügbar",Toast.LENGTH_SHORT).show();});
+        Button info=new Button(this); info.setText("Audioquellen / Lizenzen"); root.addView(info);
+        info.setOnClickListener(v->{try(java.io.InputStream in=getAssets().open("audio-credits.txt")){
+            java.io.ByteArrayOutputStream b2=new java.io.ByteArrayOutputStream(); byte[] buf=new byte[4096]; int n;
+            while((n=in.read(buf))!=-1)b2.write(buf,0,n);
+            new android.app.AlertDialog.Builder(this).setTitle("Audioquellen").setMessage(b2.toString("UTF-8")).setPositiveButton("OK",null).show();
+        }catch(java.io.IOException ex){Toast.makeText(this,"Quellen nicht verfügbar",Toast.LENGTH_SHORT).show();}});
         TextView note=label("Vor der Fahrt einstellen. Handy sicher befestigen. Tesla: Bluetooth als Medienquelle wählen. Bei fehlendem GPS bleibt der Fahr-Sound stumm. Nicht während der Fahrt bedienen.",14); note.setPadding(0,24,0,0); root.addView(note);
     }
     private void requestStart(){
