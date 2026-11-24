@@ -1,0 +1,33 @@
+name: Referenz-Analyse
+# Downloads real engine recordings from Wikimedia Commons, compares their spectrum with the
+# synthesizer and searches better exhaust tone parameters. Results are committed to analysis/.
+on:
+  push:
+    branches: [reference-analysis]
+    paths-ignore: ['analysis/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Ensure ffmpeg
+        run: which ffmpeg || (sudo apt-get update && sudo apt-get install -y ffmpeg)
+      - name: Fetch reference recordings
+        run: python3 tools/fetch_references.py refs
+      - name: Compare and tune
+        run: bash tools/run_refmatch.sh refs analysis | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Commit results
+        run: |
+          cp refs/sources.json analysis/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add analysis
+          git commit -m "Reference analysis results for ${GITHUB_SHA::7}" || echo "nothing to commit"
+          git push

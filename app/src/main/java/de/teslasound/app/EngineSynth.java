@@ -32,6 +32,10 @@ final class EngineSynth {
             this.rough=rough;this.lope=lope;this.knock=knock;this.valve=valve;this.intake=intake;this.pops=pops;
             this.turbos=turbos;this.turboHz=turboHz;this.bov=bov;this.blower=blower;this.fan=fan;this.hybrid=hybrid;this.gearWhine=gearWhine;
         }
+        /** Copy with a different exhaust tone (muffler cutoffs, brightness, pulse sharpness). */
+        Profile tone(double mufLo,double mufHi,double bright,double sharp){
+            return new Profile(banks,pipeFb,pipeMix,sharp,mufLo,mufHi,bright,rough,lope,knock,valve,intake,pops,turbos,turboHz,bov,blower,fan,hybrid,gearWhine);
+        }
     }
 
     // Bank sequence of the firing order (one entry per cylinder, evenly spaced over 720 degrees).
@@ -89,8 +93,9 @@ final class EngineSynth {
     private double blowerLoad=0, blowerPhase=0, fanPhase=0, fanAm=0, motorPhase=0, gearPhase=0;
     private double accessory=0;
 
-    EngineSynth(int mode,EngineAudio.Spec spec,int rate){
-        this.rate=rate;this.spec=spec;this.pr=PROFILES[mode];
+    EngineSynth(int mode,EngineAudio.Spec spec,int rate){this(mode,spec,rate,PROFILES[mode]);}
+    EngineSynth(int mode,EngineAudio.Spec spec,int rate,Profile profile){
+        this.rate=rate;this.spec=spec;this.pr=profile;
         this.cyl=pr.banks.length;
         int maxBank=0;for(int b:pr.banks)maxBank=Math.max(maxBank,b);
         nb=maxBank+1;
