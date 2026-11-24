@@ -13,3 +13,6 @@ Inoffizielles Projekt ohne Verbindung zu Tesla.
 
 ## Version 0.5.0
 Alle Bedienelemente stehen oberhalb der Fahrzeuggalerie. Die 17 fotorealistisch KI-generierten Fahrzeugbilder sind direkt in assets/vehicles/0.jpg bis 16.jpg enthalten. Das neue TeslaSound-App-Icon ist in drawable-nodpi/teslasound_icon.png hinterlegt. Alle Bilder sind offline verfügbar. Die Motorsynthese bleibt in dieser Version unverändert. Eigene PCM-WAV-Aufnahmen lassen sich weiterhin importieren. Die Fahrzeugbilder sind illustrative KI-Renderings, keine Herstellerfotos.
+
+## 0.5.1
+Trabant-specific pulse synthesis, no continuous synthetic broadband noise on any profile. Optional licensed Trabant sample acquisition and JVM audio smoke test; no device listening test.

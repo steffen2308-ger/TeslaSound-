@@ -17,3 +17,6 @@ The build attempts to retrieve publicly playable previews of the following real 
 - Two-stroke Trabant: blukotek, https://freesound.org/people/blukotek/sounds/412818/
 
 All listed sources indicate CC0. No claim of exact vehicle replication. No sound files are sent from a phone to a server. No AI training.
+
+## Trabant 601 source candidate (CC BY 4.0)
+Boštjan Troha / Technical Museum of Slovenia, Sounds Of Changes, TRABANT 601 – TRAMP – engine running, recorded July 23, 2019. https://www.soundsofchanges.eu/sound/trabant-601-tramp-engine-running/ — https://creativecommons.org/licenses/by/4.0/ . If available, the audio is excerpted, filtered, resampled, normalized and looped. Fallback candidate: blukotek, two-stroke Trabant engine 02, CC0. Only recordings actually included are identified by engines/sample-report.json.

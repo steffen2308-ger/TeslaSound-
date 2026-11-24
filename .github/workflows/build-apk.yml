@@ -25,6 +25,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Try licensed Trabant recording
+        continue-on-error: true
+        timeout-minutes: 2
+        run: |
+          python3 -m venv /tmp/trabi
+          /tmp/trabi/bin/pip -q install numpy
+          /tmp/trabi/bin/python tools/prepare_recordings.py
+      - name: Check sound engine without Android device
+        run: bash tools/test_audio.sh
       - run: gradle --no-daemon assembleDebug
       - name: Prepare APK
         run: cp app/build/outputs/apk/debug/app-debug.apk TeslaSound.apk
