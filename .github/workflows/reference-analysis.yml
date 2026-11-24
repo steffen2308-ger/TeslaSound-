@@ -3,7 +3,7 @@ name: Referenz-Analyse
 # synthesizer and searches better exhaust tone parameters. Results are committed to analysis/.
 on:
   push:
-    branches: [reference-analysis]
+    branches: ['reference-analysis*']
     paths-ignore: ['analysis/**']
   workflow_dispatch:
 permissions:
