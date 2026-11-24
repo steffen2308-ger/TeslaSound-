@@ -39,7 +39,8 @@ final class EngineAudio {
         final double base;final float[] data;double pos;
         double at(double phase){double f=phase*data.length;int i=Math.min(data.length-1,(int)f);return data[i]+(data[(i+1)%data.length]-data[i])*(f-i);}
         Loop(double base,float[] data){this.base=base;this.data=data;}
-        double next(double rpm){int i=(int)pos;int j=(i+1)%data.length;double x=data[i]+(data[j]-data[i])*(pos-i);pos+=Math.max(.48,Math.min(2.35,rpm/base));if(pos>=data.length)pos-=data.length;return x;}
+        double next(double rpm){return next(rpm,2.35);}
+        double next(double rpm,double maxRatio){int i=(int)pos;int j=(i+1)%data.length;double x=data[i]+(data[j]-data[i])*(pos-i);pos+=Math.max(.48,Math.min(maxRatio,rpm/base));if(pos>=data.length)pos-=data.length;return x;}
     }
     private final int rate;
     private double turbo=0,turboPhase=0,turboAir=0,previousLoad=0;
@@ -55,6 +56,8 @@ final class EngineAudio {
     private double trabiFilter=0,trabiFilter2=0,trabiCrank=0;
     private int trabiPulse=0;
     private double samplePhase=0;
+    private Loop trabiActive=null,trabiPrevious=null;
+    private double trabiFade=1;
     EngineAudio(AssetManager assets,int rate, File imported){
         this.rate=rate;
         try{String[] files=assets.list("trabant_phase");if(files!=null)for(String name:files)if(name.endsWith(".pcm")){
@@ -104,15 +107,15 @@ final class EngineAudio {
             list.sort(Comparator.comparingDouble(l->l.base));
         }
     }
-    void reset(){gearbox.reset();current=-1;cycle=0;fireIndex=0;Arrays.fill(ring,0);shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;}
+    void reset(){gearbox.reset();current=-1;cycle=0;fireIndex=0;Arrays.fill(ring,0);shiftSound=0;previousShift=false;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
     double rpm(){return gearbox.rpm;}
     int gear(){return gearbox.gear;}
     boolean shifting(){return gearbox.shiftLeft>0;}
-    boolean hasRecording(){return current>=0&&(!recordings.get(current).isEmpty()||(current==4&&!trabiTables.isEmpty()));}
+    boolean hasRecording(){return current>=0&&!recordings.get(current).isEmpty();}
     void render(short[] out,int mode,double speed,double acceleration,double volume,double dt){
         mode=Math.max(0,Math.min(SPECS.length-1,mode));
         Spec p=SPECS[mode];
-        if(current!=mode){gearbox.reset();current=mode;cycle=0;fireIndex=0;Arrays.fill(ring,0);previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;}
+        if(current!=mode){gearbox.reset();current=mode;cycle=0;fireIndex=0;Arrays.fill(ring,0);previousShift=false;shiftSound=0;amp=0;prevRpm=0;blowerLoad=0;turbo=0;turboAir=0;previousLoad=0;trabiFilter=0;trabiFilter2=0;trabiCrank=0;trabiPulse=0;samplePhase=0;dc=0;trabiActive=null;trabiPrevious=null;trabiFade=1;}
         gearbox.update(p,speed,acceleration,dt);
         boolean shifting=shifting();
         if(shifting&&!previousShift)shiftSound=1;
@@ -130,12 +133,15 @@ final class EngineAudio {
             if(lo!=hi)mix=Math.max(0,Math.min(1,Math.log(rpm/lo.base)/Math.log(hi.base/lo.base)));
         }
         double wa=Math.sqrt(1-mix),wb=Math.sqrt(mix);
-        Loop tableLo=null,tableHi=null;
-        double tableMix=0;
-        if(mode==4&&!trabiTables.isEmpty()){
-            tableLo=trabiTables.get(0);tableHi=trabiTables.get(trabiTables.size()-1);
-            for(Loop t:trabiTables){if(t.base<=rpm)tableLo=t;if(t.base>=rpm){tableHi=t;break;}}
-            if(tableHi!=tableLo)tableMix=Math.max(0,Math.min(1,(rpm-tableLo.base)/(tableHi.base-tableLo.base)));
+        // Keep the original full recording, including its natural irregularity.
+        // Select one layer with hysteresis; only overlap briefly on an actual layer change.
+        if(mode==4&&!layers.isEmpty()){
+            Loop best=layers.get(0);
+            for(Loop candidate:layers)if(Math.abs(Math.log(rpm/candidate.base))<Math.abs(Math.log(rpm/best.base)))best=candidate;
+            if(trabiActive==null){trabiActive=best;trabiPrevious=null;trabiFade=1;}
+            else if(best!=trabiActive && trabiFade>=1 && Math.abs(Math.log(rpm/trabiActive.base))-Math.abs(Math.log(rpm/best.base))>.085){
+                trabiPrevious=trabiActive;trabiActive=best;trabiFade=0;
+            }
         }
         double norm=(rpm-p.idle)/(p.redline-p.idle);
         if(prevRpm<=0)prevRpm=rpm;
@@ -183,17 +189,19 @@ final class EngineAudio {
                 synth=(.78*trabiFilter2+.22*trabiFilter)*1.15;
             }
             double samples=0;
-            if(lo!=null){samples=lo.next(rpm)*wa;if(hi!=lo)samples+=hi.next(rpm)*wb;}
-            double x=(1-recWeight)*synth+recWeight*samples;
-            if(tableLo!=null){
-                // Same phase for all RPM layers: no drifting beat frequencies or repeated rev sweeps.
-                samplePhase+=runningRpm/(60.0*8*rate);
-                samplePhase-=Math.floor(samplePhase);
-                double clean=tableLo.at(samplePhase)*(1-tableMix)+tableHi.at(samplePhase)*tableMix;
-                // A gentle transition preserves the familiar original low-speed recording.
-                double w=lo==null?1:Math.max(0,Math.min(1,(rpm-1450)/550));
-                x=x*(1-w)+clean*w;
-            }
+            if(mode==4&&trabiActive!=null){
+                // Do not replace the exhaust recording with a periodic averaged waveform.
+                // Cap stretching because the source clip contains no genuine full-throttle high RPM.
+                samples=trabiActive.next(runningRpm,1.55);
+                if(trabiPrevious!=null&&trabiFade<1){
+                    double oldSample=trabiPrevious.next(runningRpm,1.55);
+                    double f=.5-.5*Math.cos(Math.PI*trabiFade);
+                    samples=oldSample*(1-f)+samples*f;
+                    trabiFade=Math.min(1,trabiFade+1.0/(rate*.085));
+                    if(trabiFade>=1)trabiPrevious=null;
+                }
+            }else if(lo!=null){samples=lo.next(runningRpm)*wa;if(hi!=lo)samples+=hi.next(runningRpm)*wb;}
+            double x=mode==4&&trabiActive!=null?samples:(1-recWeight)*synth+recWeight*samples;
             if(mode==10||mode==11||mode==12){
                 double wanted=shifting?0:load*Math.sqrt(Math.max(0,norm));
                 turbo+=(wanted-turbo)*(wanted>turbo?.00014:.00035);

@@ -19,3 +19,6 @@ Trabant-specific pulse synthesis, no continuous synthetic broadband noise on any
 
 ## 0.5.2
 Stop audio when activity goes into background or task is removed. Private phase-aligned Trabant samples may be packaged separately; public repository contains no unlicensed source audio.
+
+## 0.5.3
+Trabant private recordings: retain full unaveraged samples, avoid continuous overlap and synthetic/table fallback when a recording is present. Limit pitch ratio to 1.55 until native high-RPM recordings are available. Existing foreground exit behavior remains.
