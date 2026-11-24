@@ -25,3 +25,6 @@ Trabant private recordings: retain full unaveraged samples, avoid continuous ove
 
 ## 0.5.4
 Dedicated real-time Trabant two-stroke synthesizer. Two combustion events per crank revolution, variable individual pressure pulses, fixed exhaust resonances, no loop playback or broadband hiss for the Trabant. Existing imported audio for other profiles is unchanged. A generated driving audio preview accompanies the CI artifact.
+
+## 0.5.5
+Trabant synthesizer: feedback delay line models the expansion chamber (~140 Hz pipe resonance), separate kernels per cylinder for an audible twin character, short filtered noise burst gated to each combustion event (no continuous noise), sharper blowdown transient. Level reduced at high RPM to stay below clipping.
