@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -37,3 +37,15 @@ jobs:
             TeslaSound.apk
             Trabant-Synth-Preview.wav
           if-no-files-found: error
+      - name: Publish APK as release "latest"
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(grep -oP "versionName '\K[^']+" app/build.gradle)"
+          gh release delete latest --cleanup-tag --yes || true
+          gh release create latest TeslaSound.apk Trabant-Synth-Preview.wav \
+            --target "$GITHUB_SHA" \
+            --title "TeslaSound $version (aktueller Build)" \
+            --notes "Automatisch gebaute Debug-APK von main, Commit ${GITHUB_SHA::7}. Nur zum Testen." \
+            --prerelease
