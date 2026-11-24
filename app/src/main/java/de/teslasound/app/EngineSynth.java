@@ -25,12 +25,18 @@ final class EngineSynth {
         final double rough, lope, knock, valve, intake, pops;
         final int turbos; final double turboHz, bov;
         final double blower, fan, hybrid, gearWhine;
+        double rasp; // broadband exhaust flow noise per combustion (set from RASP)
         Profile(int[] banks,double pipeFb,double pipeMix,double sharp,double mufLo,double mufHi,double bright,
                 double rough,double lope,double knock,double valve,double intake,double pops,
                 int turbos,double turboHz,double bov,double blower,double fan,double hybrid,double gearWhine){
             this.banks=banks;this.pipeFb=pipeFb;this.pipeMix=pipeMix;this.sharp=sharp;this.mufLo=mufLo;this.mufHi=mufHi;this.bright=bright;
             this.rough=rough;this.lope=lope;this.knock=knock;this.valve=valve;this.intake=intake;this.pops=pops;
             this.turbos=turbos;this.turboHz=turboHz;this.bov=bov;this.blower=blower;this.fan=fan;this.hybrid=hybrid;this.gearWhine=gearWhine;
+        }
+        /** Copy with a different exhaust tone (muffler cutoffs, brightness, pulse sharpness). */
+        Profile tone(double mufLo,double mufHi,double bright,double sharp,double rasp){
+            Profile p=new Profile(banks,pipeFb,pipeMix,sharp,mufLo,mufHi,bright,rough,lope,knock,valve,intake,pops,turbos,turboHz,bov,blower,fan,hybrid,gearWhine);
+            p.rasp=rasp;return p;
         }
     }
 
@@ -45,25 +51,30 @@ final class EngineSynth {
     private static final int[] BOXER4={0,1,1,0};             // 1-4-3-2, cylinders 1/2 right, 3/4 left
 
     static final Profile[] PROFILES={
+        // Tone values (sharp, mufLo, mufHi, bright and RASP) tuned against Wikimedia Commons recordings, see analysis/report.md.
         //            banks   fb   mix  sharp  mufLo mufHi bright rough lope knock valve intake pops  tb  turboHz bov  blow fan hyb gear
-        /* 0 F1 V8     */ new Profile(FLAT8, .45,.50,9000,4500,9500,1.00, .30,.00,.00,.05,.90,.35, 0,   0, 0, 0,0,0,.05),
-        /* 1 V8 klass. */ new Profile(CROSS8,.56,.62,3200, 900,2300, .45,1.00,.90,.00,.10,.25,.25, 0,   0, 0, 0,0,0,0),
-        /* 2 Diesel R4 */ new Profile(I4,    .40,.40,6000, 750,1600, .40, .50,.00,.90,.14,.10,.00, 1,5200, 0, 0,0,0,0),
-        /* 3 Benzin R4 */ new Profile(I4,    .45,.45,4000,1100,2600, .55, .40,.00,.00,.12,.30,.00, 0,   0, 0, 0,0,0,0),
+        /* 0 F1 V8     */ new Profile(FLAT8, .45,.50,14400,2250,4750,.30,.30,.00,.00,.05,.90,.35,0,0,0,0,0,0,.05),
+        /* 1 V8 klass. */ new Profile(CROSS8,.56,.62,5120,900,4600,.30,1.00,.90,.00,.10,.25,.25,0,0,0,0,0,0,0),
+        /* 2 Diesel R4 */ new Profile(I4,    .40,.40,9600,375,4800,1.10,.50,.00,.90,.14,.10,.00,1,5200,0,0,0,0,0),
+        /* 3 Benzin R4 */ new Profile(I4,    .45,.45,6400,550,2600,.30,.40,.00,.00,.12,.30,.00,0,0,0,0,0,0,0),
         /* 4 Trabant (own synthesizer, entry unused) */ new Profile(I4,.4,.4,3000,1000,2000,.5,.5,0,0,0,0,0,0,0,0,0,0,0,0),
-        /* 5 GT3 Boxer6*/ new Profile(ALT6,  .50,.55,6000,2000,6200, .85, .35,.00,.00,.08,.90,.40, 0,   0, 0, 0,0,0,0),
-        /* 6 Mustang   */ new Profile(CROSS8,.56,.62,3500,1100,3000, .55, .70,.30,.00,.09,.40,.55, 0,   0, 0, 0,0,0,0),
-        /* 7 F12 V12   */ new Profile(ALT12, .45,.48,6500,2200,7200, .90, .25,.00,.00,.06,.85,.30, 0,   0, 0, 0,0,0,0),
-        /* 8 Hellcat   */ new Profile(CROSS8,.56,.62,3400,1000,2800, .55, .70,.35,.00,.09,.30,.50, 0,   0, 0, 1,0,0,0),
-        /* 9 Veneno    */ new Profile(ALT12, .45,.48,6500,2400,7600, .90, .25,.00,.00,.06,.80,.60, 0,   0, 0, 0,0,0,0),
-        /*10 RS6       */ new Profile(CROSS8,.50,.55,3500, 800,2400, .50, .40,.10,.00,.07,.20,.60, 2,4300, 1, 0,0,0,0),
-        /*11 Chiron    */ new Profile(W16,   .45,.50,3500, 700,2000, .40, .25,.00,.00,.05,.30,.10, 4,3600, 1, 0,0,0,0),
-        /*12 M3        */ new Profile(ALT6,  .50,.55,4500,1300,4000, .60, .30,.00,.00,.08,.30,.70, 2,5000,.4, 0,0,0,0),
-        /*13 AMG GT3   */ new Profile(CROSS8,.56,.60,4500,2000,6000, .75, .50,.25,.00,.08,.60,.80, 0,   0, 0, 0,0,0,.05),
-        /*14 LFA V10   */ new Profile(ALT10, .45,.48,7500,2800,8200, .95, .30,.00,.00,.06,.90,.35, 0,   0, 0, 0,0,0,0),
-        /*15 Käfer     */ new Profile(BOXER4,.50,.55,2500, 900,1800, .40, .80,.10,.00,.35,.15,.10, 0,   0, 0, 0,1,0,0),
-        /*16 Revuelto  */ new Profile(ALT12, .45,.48,7000,2300,7600, .90, .25,.00,.00,.06,.80,.50, 0,   0, 0, 0,0,1,0),
+        /* 5 GT3 Boxer6*/ new Profile(ALT6,  .50,.55,9600,4000,8680,.30,.35,.00,.00,.08,.90,.40,0,0,0,0,0,0,0),
+        /* 6 Mustang   */ new Profile(CROSS8,.56,.62,5600,3300,3795,1.10,.70,.30,.00,.09,.40,.55,0,0,0,0,0,0,0),
+        /* 7 F12 V12   */ new Profile(ALT12, .45,.48,10400,6600,16000,.30,.25,.00,.00,.06,.85,.30,0,0,0,0,0,0,0),
+        /* 8 Hellcat   */ new Profile(CROSS8,.56,.62,5440,3000,8400,.30,.70,.35,.00,.09,.30,.50,0,0,0,1,0,0,0),
+        /* 9 Veneno    */ new Profile(ALT12, .45,.48,10400,1200,7600,.30,.25,.00,.00,.06,.80,.60,0,0,0,0,0,0,0),
+        /*10 RS6       */ new Profile(CROSS8,.50,.55,5600,800,7200,.30,.40,.10,.00,.07,.20,.60,2,4300,1,0,0,0,0),
+        /*11 Chiron    */ new Profile(W16,   .45,.50,5600,2100,6000,.30,.25,.00,.00,.05,.30,.10,4,3600,1,0,0,0,0),
+        /*12 M3        */ new Profile(ALT6,  .50,.55,7200,3900,12000,.30,.30,.00,.00,.08,.30,.70,2,5000,.4,0,0,0,0),
+        /*13 AMG GT3   */ new Profile(CROSS8,.56,.60,7200,2800,8400,.30,.50,.25,.00,.08,.60,.80,0,0,0,0,0,0,.05),
+        /*14 LFA V10   */ new Profile(ALT10, .45,.48,12000,1400,5740,.30,.30,.00,.00,.06,.90,.35,0,0,0,0,0,0,0),
+        /*15 Käfer     */ new Profile(BOXER4,.50,.55,1500,2700,5400,.30,.80,.10,.00,.35,.15,.10,0,0,0,0,1,0,0),
+        /*16 Revuelto  */ new Profile(ALT12, .45,.48,11200,1150,7600,.30,.25,.00,.00,.06,.80,.50,0,0,0,0,0,1,0),
     };
+
+    // Exhaust flow noise per vehicle (tuned against reference recordings).
+    private static final double[] RASP={.30,.35,.20,.35,0,.35,.35,.30,.20,.35,.35,.35,.35,.80,.30,.80,.55};
+    static{for(int i=0;i<PROFILES.length;i++)PROFILES[i].rasp=RASP[i];}
 
     private static final int RING=4096, MASK=RING-1;
     private final int rate;
@@ -74,7 +85,7 @@ final class EngineSynth {
     private final double[][] rings;       // per-bank exhaust input
     private final double[][] pipes;       // per-bank pipe delay lines
     private final int[] pipeCursor, bankDelay;
-    private final double[] pipeDamp, cylGain;
+    private final double[] pipeDamp, cylGain, raspEnv, raspLp;
     private final double[] mech=new double[RING];
     private final double[] knockK, valveK, crackK;
     private final Random random;
@@ -89,14 +100,15 @@ final class EngineSynth {
     private double blowerLoad=0, blowerPhase=0, fanPhase=0, fanAm=0, motorPhase=0, gearPhase=0;
     private double accessory=0;
 
-    EngineSynth(int mode,EngineAudio.Spec spec,int rate){
-        this.rate=rate;this.spec=spec;this.pr=PROFILES[mode];
+    EngineSynth(int mode,EngineAudio.Spec spec,int rate){this(mode,spec,rate,PROFILES[mode]);}
+    EngineSynth(int mode,EngineAudio.Spec spec,int rate,Profile profile){
+        this.rate=rate;this.spec=spec;this.pr=profile;
         this.cyl=pr.banks.length;
         int maxBank=0;for(int b:pr.banks)maxBank=Math.max(maxBank,b);
         nb=maxBank+1;
         seed=7919L*(mode+1);random=new Random(seed);
         kernels=new double[nb][3][];rings=new double[nb][RING];pipes=new double[nb][];
-        pipeCursor=new int[nb];bankDelay=new int[nb];pipeDamp=new double[nb];
+        pipeCursor=new int[nb];bankDelay=new int[nb];pipeDamp=new double[nb];raspEnv=new double[nb];raspLp=new double[nb];
         double pipeHz=spec.resonances[0];
         for(int b=0;b<nb;b++){
             // Banks differ slightly in pipe length, header length and therefore mode tuning.
@@ -163,7 +175,7 @@ final class EngineSynth {
     void reset(){
         for(double[] r:rings)Arrays.fill(r,0);
         for(double[] p:pipes)Arrays.fill(p,0);
-        Arrays.fill(mech,0);Arrays.fill(pipeCursor,0);Arrays.fill(pipeDamp,0);Arrays.fill(turboPhase,0);
+        Arrays.fill(mech,0);Arrays.fill(pipeCursor,0);Arrays.fill(pipeDamp,0);Arrays.fill(raspEnv,0);Arrays.fill(raspLp,0);Arrays.fill(turboPhase,0);
         cursor=0;firing=0;phase=1;interval=1;mixture=1;lp1=lp2=dc=0;
         intakeEnv=intLow=intBand=0;crackEnv=crackLp=0;overrun=0;prevLoad=0;prevShift=false;
         spool=0;bovEnv=bovLow=bovBand=0;blowerLoad=blowerPhase=fanPhase=fanAm=motorPhase=gearPhase=0;accessory=0;
@@ -216,6 +228,8 @@ final class EngineSynth {
             int a=Math.min(1,(int)color);double b=color-a;
             double frac=clamp(phase/Math.max(step,1e-9),0,1);
             addKernel(rings[bank],bankDelay[bank],kernels[bank][a],kernels[bank][a+1],b,force,frac);
+            // Turbulent gas rushing out of the opened exhaust valve.
+            raspEnv[bank]=Math.min(2,raspEnv[bank]+pr.rasp*force*(.4+.6*load));
             // Pressure-rise knock of compression ignition; loudest at idle and under load.
             if(pr.knock>0)addClick(knockK,0,pr.knock*.55*(.55+.45*load+.4*idleness)*(.8+.4*random.nextDouble()));
             // Valvetrain tick, offset from combustion, masked as load rises.
@@ -235,8 +249,15 @@ final class EngineSynth {
         }
         // Per-bank exhaust: direct pulse plus reflections in its own pipe.
         double exhaust=0;
+        double raspHp=coef(500,rate),raspDecay=Math.exp(-1/(rate*.004));
         for(int b=0;b<nb;b++){
             double pressure=rings[b][cursor];rings[b][cursor]=0;
+            if(raspEnv[b]>1e-5){
+                double noise=(random.nextDouble()*2-1)*raspEnv[b];
+                raspLp[b]+=raspHp*(noise-raspLp[b]);
+                pressure+=(noise-raspLp[b])*.6;
+                raspEnv[b]*=raspDecay;
+            }
             double[] pipe=pipes[b];
             double out=pipe[pipeCursor[b]];
             pipeDamp[b]+=(.30+.15*load)*(out-pipeDamp[b]);

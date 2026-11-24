@@ -31,3 +31,6 @@ Trabant synthesizer: feedback delay line models the expansion chamber (~140 Hz p
 
 ## 0.6.0
 New physical-style synthesizer for all 16 other vehicles (EngineSynth): every cylinder bank feeds its own exhaust pipe, so the firing order shapes the sound (crossplane V8 burble, even V10/V12 scream, boxer beat). Per-cylinder differences and lumpy idle, diesel knock, valvetrain ticks, intake roar under load, overrun pops after lifting off and on upshifts, turbo whine with blow-off, roots blower, cooling fan (Beetle), hybrid e-motor and straight-cut gear whine. Levels calibrated per vehicle. Imported recordings still take priority within their RPM range.
+
+## 0.6.1
+Engine tone tuned against real recordings from Wikimedia Commons: CI downloads them (they are not packaged), compares third-octave spectra with the synthesizer and searches muffler cutoffs, brightness, pulse sharpness and the new per-combustion exhaust flow noise. Mean tone deviation dropped from about 5.9 dB to 4.5 dB. Results and sources: analysis/report.md. Rerun by pushing to the reference-analysis branch.
