@@ -36,7 +36,7 @@ final class VehicleCard extends View {
     private void rect(Canvas c,float x,float y,float x2,float y2,int color){color(color);c.drawRect(x,y,x2,y2,p);}
     private void text(Canvas c,String t,float y,float size,int color,float max){p.setTypeface(Typeface.create("sans-serif-medium",Typeface.NORMAL));p.setTextAlign(Paint.Align.CENTER);p.setTextSize(size);color(color);if(p.measureText(t)>max)p.setTextSize(size*max/p.measureText(t));c.drawText(t,150,y,p);}
     private Path path(String commands){
-        String[] a=commands.split(" ");Path path=new Path();int k=0;
+        String[] a=commands.replaceAll("([MLQZ])", " $1 ").trim().split("\\s+");Path path=new Path();int k=0;
         while(k<a.length){String cmd=a[k++];if(cmd.equals("Z")){path.close();continue;}float x=Float.parseFloat(a[k++]),y=Float.parseFloat(a[k++]);if(cmd.equals("M"))path.moveTo(x,y);else if(cmd.equals("L"))path.lineTo(x,y);else if(cmd.equals("Q"))path.quadTo(x,y,Float.parseFloat(a[k++]),Float.parseFloat(a[k++]));}return path;
     }
     @Override protected void onDraw(Canvas canvas){
